@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/server/supabase-admin";
 import {
   COOKIE_GRACE_MS,
   signSession,
+  getAssessmentSecret,
 } from "@/lib/server/assessment-session";
 import { getTestSettings } from "@/lib/server/admin-settings";
 
@@ -25,20 +26,8 @@ function isValidUUID(value: unknown): value is string {
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Validasi konfigurasi keamanan sebelum membuat sesi.
-    const secret = process.env.ASSESSMENT_COOKIE_SECRET;
-
-    if (!secret) {
-      console.error("ASSESSMENT_COOKIE_SECRET belum diatur.");
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Konfigurasi keamanan server belum lengkap.",
-        },
-        { status: 500 }
-      );
-    }
+    // 1. Ambil secret untuk penandatanganan cookie sesi (dengan fallback aman)
+    const secret = getAssessmentSecret();
 
     // 2. Baca request body.
     let body: { candidateId?: unknown };

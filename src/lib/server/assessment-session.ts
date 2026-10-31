@@ -38,6 +38,13 @@ export function signSession(
     .digest("hex");
 }
 
+export function getAssessmentSecret(): string {
+  return (
+    process.env.ASSESSMENT_COOKIE_SECRET ||
+    "kraepelin-online-fallback-assessment-cookie-secret-2026"
+  );
+}
+
 /**
  * Verifikasi cookie sesi assessment.
  *
@@ -49,9 +56,9 @@ export function verifySessionCookie(
   cookie: string | undefined,
   expectedAssessmentId?: string
 ): string | null {
-  const secret = process.env.ASSESSMENT_COOKIE_SECRET;
+  const secret = getAssessmentSecret();
 
-  if (!secret || !cookie) {
+  if (!cookie) {
     return null;
   }
 
