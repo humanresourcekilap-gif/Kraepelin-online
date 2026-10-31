@@ -1,0 +1,22 @@
+---
+description: Backend API routes, Supabase integration, and session security
+globs: src/app/api/**/*.{ts,js},src/lib/server/**/*.{ts,js}
+alwaysApply: false
+---
+
+# Backend, Supabase & Security Rules
+
+## Server Isolation
+- All files inside `src/lib/server/` must have `import "server-only";` at the top.
+- Never export sensitive credentials or internal keys to client bundles.
+
+## Database & Supabase Conventions
+- Reference: `docs/DATABASE_SCHEMA.md`.
+- Use `supabaseAdmin` for database writes, session updates, and RPC calls.
+- Assessment finalization must be completed via the stored procedure `submit_kraepelin_assessment` to ensure atomic state updates.
+- Verify session cookies using `verifySessionCookie()` before processing private session endpoints (`/api/assessment/answers`, `/api/assessment/submit`).
+
+## Session Security
+- Cookie `assessment_session` is an HttpOnly, HMAC-SHA256 signed token (`${assessmentId}.${signature}`).
+- Use timing-safe comparisons (`crypto.timingSafeEqual`) to prevent timing attacks.
+

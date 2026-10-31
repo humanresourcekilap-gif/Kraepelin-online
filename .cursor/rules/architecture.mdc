@@ -1,0 +1,17 @@
+---
+description: General architecture, Next.js 16 conventions, and project structure
+globs: **/*
+alwaysApply: true
+---
+
+# General Architecture & Conventions
+
+- **Project:** Kraepelin Online (Online Psychometric Assessment)
+- **Framework:** Next.js 16.4.1 (App Router), React 19, TypeScript 5, Tailwind CSS v4.
+- **Reference Docs:** Always refer to `docs/ARCHITECTURE.md` before making sweeping structural changes.
+
+## Next.js & React Guidelines
+- Server Components by default; only add `"use client"` when component state (`useState`, `useEffect`, `useRef`, browser listeners) is necessary.
+- React Compiler is enabled (`reactCompiler: true` in `next.config.ts`), write clean declarative React without unnecessary manual memoization unless profiling shows a bottleneck.
+- Do not remove or alter `<!-- BEGIN:nextjs-agent-rules -->` inside `AGENTS.md`.
+

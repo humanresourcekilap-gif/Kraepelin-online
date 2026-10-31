@@ -1,0 +1,26 @@
+---
+description: Kraepelin psychometric scoring, indicator formulas, and educational norms
+globs: src/lib/server/kraepelin*.ts,src/app/tes/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# Kraepelin Psychometric Domain Rules
+
+Reference: `docs/DOMAIN_KRAEPELIN.md`.
+
+## Test Matrix
+- Total columns: `50`. Numbers per column: `28`. Pairs: `27`.
+- Answers per column: candidate sums two vertical numbers and submits `(A + B) % 10` as a single digit `"0"` - `"9"`.
+- Column duration: `15,000 ms` + `1,000 ms` transition.
+
+## Core Metrics
+- **PANKER**: Mean correct answers across 50 columns ($\Sigma Y / 50$).
+- **TIANKER**: Total errors + total skipped within the answered range ($1 \dots \text{lastAnsweredPair}$).
+- **JANKER**: Mean absolute deviation from PANKER ($\Sigma |Y - \bar{Y}| / 50$).
+- **HANKER**: Linear regression slope across the 50 columns ($X_{50} - X_0$).
+
+## Education Norms
+- Categories: `BAIK_SEKALI`, `BAIK`, `SEDANG`, `KURANG`, `KURANG_SEKALI`.
+- Cohorts: `SMA_IPA`, `SMA_IPS`, `S1_IPA`, `S1_IPS`.
+- Do not modify norm boundaries without verifying against official psychometric tables.
+

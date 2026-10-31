@@ -1,0 +1,29 @@
+# Cursor Rules for Kraepelin Online
+
+You are an expert full-stack developer assisting on `kraepelin-online` (Next.js 16.4.1 App Router, React 19, Tailwind CSS v4, Supabase, TypeScript).
+
+## Primary Documentation Links
+- Architecture: `docs/ARCHITECTURE.md`
+- Kraepelin Domain & Math: `docs/DOMAIN_KRAEPELIN.md`
+- Database Schema & RPCs: `docs/DATABASE_SCHEMA.md`
+- Testing & Diagnostics: `docs/TESTING_AND_VERIFICATION.md`
+
+## Fundamental Rules
+1. **Next.js 16 App Router**:
+   - Default to Server Components unless user interactivity (hooks, state, browser events) is required.
+   - Use `"use client"` directive when hooks (`useState`, `useEffect`, `useRef`) are needed.
+   - Turbopack and React Compiler are active.
+2. **Server-Only Protection**:
+   - All server utilities under `src/lib/server/` must begin with `import "server-only";`.
+   - Never leak answer keys (`kunci-jawaban.ts`), scoring algorithms, or Supabase service role keys to client components.
+3. **Kraepelin Psychometrics Rules**:
+   - 50 columns, 28 numbers/column, 27 pairs/column.
+   - 15s per column + 1s transition.
+   - Inputs are single digits (`(a + b) % 10`).
+   - Scoring formulas for PANKER, TIANKER, JANKER, HANKER must adhere strictly to `docs/DOMAIN_KRAEPELIN.md`.
+4. **Security & State**:
+   - Cookie `assessment_session` is signed with HMAC-SHA256.
+   - Always validate session integrity via `verifySessionCookie()`.
+5. **Preserve Agent Rules**:
+   - In `AGENTS.md`, never remove `<!-- BEGIN:nextjs-agent-rules --> ... <!-- END:nextjs-agent-rules -->`.
+

@@ -1,0 +1,18 @@
+# Kraepelin Online
+
+> Online assessment platform for the Kraepelin psychometric test (Tes Koran) built with Next.js 16 (App Router), React 19, Tailwind CSS v4, and Supabase.
+
+## Documentation
+- [System Architecture](docs/ARCHITECTURE.md): Architecture overview, tech stack, sequence diagrams, and directory structure.
+- [Kraepelin Domain & Math](docs/DOMAIN_KRAEPELIN.md): Mathematical formulas for PANKER, TIANKER, JANKER, HANKER, and education cohort norms.
+- [Database Schema & State](docs/DATABASE_SCHEMA.md): Supabase PostgreSQL tables, stored procedures (RPCs), and session cookies.
+- [Testing & Quality Verification](docs/TESTING_AND_VERIFICATION.md): Verification endpoints, build checks, and testing commands.
+
+## Key Files
+- [Test Runner Page](src/app/tes/page.tsx): Client-side 50-column test execution with timer.
+- [Static Problem Data](src/app/tes/data-soal.ts): 50 columns x 28 digits matrix.
+- [Pure Kraepelin Math](src/lib/server/kraepelin.ts): Pure indicator calculation functions.
+- [Scoring Engine](src/lib/server/kraepelin-scoring.ts): Column answer evaluation and skip detection.
+- [Norm Categorization](src/lib/server/kraepelin-norma.ts): Educational cohort mapping.
+- [Session Security](src/lib/server/assessment-session.ts): HMAC-SHA256 session cookie signing and verification.
+

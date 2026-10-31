@@ -1,0 +1,20 @@
+---
+description: Frontend UI, page layouts, components, and Tailwind styling
+globs: src/app/**/*.{tsx,jsx,css}
+alwaysApply: false
+---
+
+# Frontend UI & Component Rules
+
+## Component Best Practices
+- Every interactive page (`/data-diri`, `/assessment`, `/tes`) must use `"use client";` at line 1.
+- Use `lucide-react` for iconography.
+- Handle responsive design with Tailwind CSS v4 utility classes.
+- Provide accessible form states: explicit error messaging, disabled buttons during network requests (`isSubmitting`, `isStarting`).
+
+## Test Runner UI (`src/app/tes/page.tsx`)
+- Keep keypad and keyboard inputs responsive and low latency.
+- Auto-advance columns strictly based on `elapsedMilliseconds` synchronized with server timestamp.
+- Always display remaining time clearly.
+- Trigger real-time save to `/api/assessment/answers` on answer input.
+
