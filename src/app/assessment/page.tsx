@@ -156,6 +156,8 @@ export default function AssessmentPage() {
             assessmentId: session.assessmentId,
             startedAt: session.startedAt,
             deadlineAt: session.deadlineAt,
+            columnDurationMs: session.columnDurationMs,
+            transitionDurationMs: session.transitionDurationMs,
           })
         );
 

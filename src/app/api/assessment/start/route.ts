@@ -88,19 +88,19 @@ export async function POST(request: NextRequest) {
 
     // 5. Periksa sesi assessment sebelumnya.
     const isAssessmentTestMode =
-      process.env.ASSESSMENT_TEST_MODE === "true" &&
-      process.env.NODE_ENV !== "production";
+      process.env.NODE_ENV !== "production" ||
+      process.env.ASSESSMENT_TEST_MODE === "true";
 
-    // 5a. Sesi yang belum dimulai atau masih berlangsung memblokir pembuatan sesi baru.
+    // 5a. Sesi yang belum dimulai atau masih berlangsung.
     const { data: sesiAktif, error: sesiAktifError } =
       await supabaseAdmin
         .from("sesi_assessment")
-        .select("id, status, batas_waktu")
+        .select(
+          "id, status, dimulai_pada, batas_waktu, durasi_kolom_detik, durasi_transisi_detik"
+        )
         .eq("id_kandidat", candidateId)
-        .in("status", [
-          "BELUM_DIMULAI",
-          "SEDANG_BERLANGSUNG",
-        ])
+        .in("status", ["BELUM_DIMULAI", "SEDANG_BERLANGSUNG"])
+        .order("dimulai_pada", { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -120,15 +120,77 @@ export async function POST(request: NextRequest) {
     }
 
     if (sesiAktif) {
-      return NextResponse.json(
-        {
-          success: false,
-          code: "ASSESSMENT_SESSION_EXISTS",
-          message:
-            "Kandidat masih memiliki sesi assessment yang aktif.",
-        },
-        { status: 409 }
-      );
+      const deadline = Date.parse(sesiAktif.batas_waktu);
+      const isExpired = Number.isFinite(deadline) ? Date.now() >= deadline : true;
+
+      if (!isExpired) {
+        // Sesi masih aktif dan belum habis waktu -> pulihkan sesi untuk kandidat (resumed)
+        const testSettings = await getTestSettings();
+        const columnDurationMs =
+          (sesiAktif.durasi_kolom_detik ?? testSettings.durasiKolomDetik) * 1000;
+        const transitionDurationMs =
+          (sesiAktif.durasi_transisi_detik ?? testSettings.durasiTransisiDetik) * 1000;
+        const totalColumns = testSettings.totalKolom || 50;
+
+        const signature = signSession(sesiAktif.id, secret);
+
+        const response = NextResponse.json(
+          {
+            success: true,
+            resumed: true,
+            assessmentId: sesiAktif.id,
+            startedAt: sesiAktif.dimulai_pada,
+            deadlineAt: sesiAktif.batas_waktu,
+            status: sesiAktif.status,
+            columnDurationMs,
+            transitionDurationMs,
+            totalColumns,
+          },
+          {
+            status: 200,
+            headers: {
+              "Cache-Control": "no-store",
+            },
+          }
+        );
+
+        response.cookies.set(
+          "assessment_session",
+          `${sesiAktif.id}.${signature}`,
+          {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            path: "/",
+            expires: new Date(deadline + COOKIE_GRACE_MS),
+          }
+        );
+
+        return response;
+      } else {
+        // Sesi sudah lewat batas waktu (kadaluarsa).
+        // Tutup sesi menggantung ini menjadi SELESAI di database.
+        await supabaseAdmin
+          .from("sesi_assessment")
+          .update({
+            status: "SELESAI",
+            diselesaikan_pada: sesiAktif.batas_waktu,
+            diperbarui_pada: new Date().toISOString(),
+          })
+          .eq("id", sesiAktif.id);
+
+        if (!isAssessmentTestMode) {
+          return NextResponse.json(
+            {
+              success: false,
+              code: "ASSESSMENT_SESSION_EXISTS",
+              message:
+                "Waktu assessment Anda telah berakhir. Hubungi HR jika diperlukan pengulangan tes.",
+            },
+            { status: 409 }
+          );
+        }
+      }
     }
 
     // 5b. Di luar mode testing, kandidat yang sudah selesai tidak boleh mengulang tanpa reset dari admin.

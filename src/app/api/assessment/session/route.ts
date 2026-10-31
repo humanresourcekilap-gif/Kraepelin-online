@@ -10,24 +10,25 @@ export async function GET(request: NextRequest) {
     const assessmentId = verifySessionCookie(cookie);
 
     if (!assessmentId) {
-      console.error("[SESSION AUTH FAILED]", {
-        cookieExists: Boolean(cookie),
-        secretExists: Boolean(process.env.ASSESSMENT_COOKIE_SECRET),
-      });
-
       return NextResponse.json(
         {
           success: false,
-          error: "Sesi tidak valid. Silakan mulai kembali.",
+          session: null,
+          error: "Belum ada sesi aktif.",
         },
-        { status: 401 }
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
       );
     }
 
     // 2. Ambil sesi dari database.
     const { data: sesi, error } = await supabaseAdmin
       .from("sesi_assessment")
-      .select("id, status, dimulai_pada, batas_waktu")
+      .select("id, status, dimulai_pada, batas_waktu, durasi_kolom_detik, durasi_transisi_detik")
       .eq("id", assessmentId)
       .maybeSingle();
 
@@ -37,9 +38,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
+          session: null,
           error: "Gagal memeriksa sesi tes.",
         },
-        { status: 500 }
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
       );
     }
 
@@ -47,9 +54,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
+          session: null,
           error: "Sesi tes tidak ditemukan.",
         },
-        { status: 404 }
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
       );
     }
 
@@ -58,9 +71,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
+          session: null,
           error: "Sesi tes sudah tidak aktif.",
         },
-        { status: 403 }
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
       );
     }
 
@@ -71,19 +90,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
+          session: null,
           error: "Waktu tes telah berakhir.",
         },
-        { status: 410 }
+        {
+          status: 200,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
       );
     }
 
-    // Ambil konfigurasi timer dinamis
+    // Ambil konfigurasi timer dinamis (snapshot dari sesi jika ada)
     let columnDurationMs = 15000;
     let transitionDurationMs = 1000;
     try {
-      const activeSettings = await getTestSettings();
-      columnDurationMs = activeSettings.durasiKolomDetik * 1000;
-      transitionDurationMs = activeSettings.durasiTransisiDetik * 1000;
+      if (sesi.durasi_kolom_detik && sesi.durasi_transisi_detik) {
+        columnDurationMs = sesi.durasi_kolom_detik * 1000;
+        transitionDurationMs = sesi.durasi_transisi_detik * 1000;
+      } else {
+        const activeSettings = await getTestSettings();
+        columnDurationMs = activeSettings.durasiKolomDetik * 1000;
+        transitionDurationMs = activeSettings.durasiTransisiDetik * 1000;
+      }
     } catch {}
 
     // Sesi yang telah lewat tetap dikirim dengan flag expired
