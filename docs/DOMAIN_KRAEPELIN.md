@@ -34,8 +34,15 @@ For each column $k \in [1, 50]$:
 ### B. Core Psychometric Indicators ([`src/lib/server/kraepelin.ts`](file:///d:/kraepelin-online/src/lib/server/kraepelin.ts))
 
 #### 1. PANKER (Kecepatan Kerja / Speed of Work)
-Average number of correct answers per column across all 50 columns:
-$$\text{PANKER} = \frac{\sum_{k=1}^{50} Y_k}{50}$$
+Kecepatan kerja rata-rata dihitung berdasarkan tabel distribusi frekuensi (Tabel 2 / $\text{Mean}_1$):
+$$\text{PANKER} = \frac{\sum (f \cdot y)}{N} \quad \left(\text{setara dengan } \frac{\sum_{k=1}^{50} Y_k}{50}\right)$$
+
+Keterangan simbol:
+- $y$ = skor benar per kolom ($0 \le y \le 27$)
+- $f$ = frekuensi = banyaknya kolom yang menghasilkan skor benar $y$
+- $N$ = total kolom = $50$
+- $Y_k$ = skor benar pada kolom ke-$k$
+
 *Higher values indicate greater mental processing speed.*
 
 #### 2. TIANKER (Ketelitian Kerja / Accuracy & Carefulness)

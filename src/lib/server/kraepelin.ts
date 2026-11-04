@@ -113,23 +113,36 @@ function validateInput(data: KraepelinColumnInput[]): void {
 
 // ==================================================
 // 4. PANKER
-// PANKER = SIGMA Y / N
-// Y = jumlah jawaban benar per kolom
+// Tabel 2 = Mean1 = Σ(f · y) / N
+// y = skor benar per kolom (0–27)
+// f = frekuensi = banyaknya kolom yang menghasilkan skor benar y
+// N = total kolom = 50
+// Nilai Σ(f · y) setara dengan Σ Y_k
 // ==================================================
 
 export function calculatePanker(
   data: KraepelinColumnInput[]
 ): PankerResult {
-  const sigmaY = data.reduce(
-    (sum, item) => sum + item.correct,
-    0
-  );
+  // Bangun histogram / tabel distribusi frekuensi
+  const frequencyMap = new Map<number, number>();
+
+  for (const item of data) {
+    const y = item.correct;
+    frequencyMap.set(y, (frequencyMap.get(y) ?? 0) + 1);
+  }
+
+  // Hitung Σ(f · y) dari histogram tabel distribusi frekuensi
+  let sigmaFY = 0;
+  for (const [y, f] of frequencyMap.entries()) {
+    sigmaFY += f * y;
+  }
 
   return {
-    value: Number((sigmaY / N).toFixed(4)),
-    sigmaY,
+    value: Number((sigmaFY / N).toFixed(4)),
+    sigmaY: sigmaFY,
   };
 }
+
 
 // ==================================================
 // 5. TIANKER
