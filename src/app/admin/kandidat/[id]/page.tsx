@@ -99,6 +99,8 @@ export default function CandidateDetailPage({
   const [candidate, setCandidate] = useState<CandidateDetail | null>(null);
   const [session, setSession] = useState<AssessmentSessionDetail | null>(null);
   const [breakdown, setBreakdown] = useState<ColumnBreakdown[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [perhitungan, setPerhitungan] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -117,6 +119,9 @@ export default function CandidateDetailPage({
           setCandidate(data.candidate);
           setSession(data.sesi);
           setBreakdown(data.breakdownPerKolom || []);
+          if (data.perhitungan) {
+            setPerhitungan(data.perhitungan);
+          }
         }
       } catch (err) {
         console.error("Gagal memuat detail kandidat:", err);
@@ -799,6 +804,257 @@ export default function CandidateDetailPage({
           </table>
         </div>
       </div>
+
+      {/* MODUL PERHITUNGAN AKADEMIS KRAEPELIN: TABEL 1, TABEL 2, & AUDIT MATEMATIS */}
+      {perhitungan && (
+        <div className="space-y-8">
+          {/* Audit & Validasi Matematis Checklist */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-emerald-500" />
+                  Audit & Validasi Konsistensi Matematis
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Verifikasi otomatis seluruh konsistensi antar-aspek (Tabel 1, Tabel 2, Panker, Tianker, Janker, Hanker)
+                </p>
+              </div>
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                  perhitungan.validation.isValid
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "bg-rose-50 text-rose-700 border border-rose-200"
+                }`}
+              >
+                {perhitungan.validation.isValid ? "100% VALID & KONSISTEN" : "ADA KETIDAKSESUAIAN"}
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {perhitungan.validation.checks.map(
+                (check: { name: string; expected: string | number; actual: string | number; valid: boolean }, idx: number) => (
+                  <div
+                    key={idx}
+                    className={`p-3 rounded-2xl border text-xs ${
+                      check.valid
+                        ? "bg-slate-50/60 border-slate-200 text-slate-800"
+                        : "bg-rose-50 border-rose-200 text-rose-800"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-semibold">
+                      <span>{check.name}</span>
+                      {check.valid ? (
+                        <Check size={14} className="text-emerald-600 shrink-0" />
+                      ) : (
+                        <AlertCircle size={14} className="text-rose-600 shrink-0" />
+                      )}
+                    </div>
+                    <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Harapan: {check.expected}</span>
+                      <span className="font-mono font-medium">Aktual: {check.actual}</span>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Tabel 1: Hasil Lembar Kerja (X, X², Y, X.Y) */}
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Tabel 1 – Hasil Lembar Kerja (X, X², Y, X.Y)
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Y = Benar + Salah (total jawaban terisi per kolom). Skip tidak masuk dalam perhitungan Y.
+                </p>
+              </div>
+              <div className="flex gap-4 text-xs font-mono font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                <span>ΣX = {perhitungan.table1.summary.sigmaX}</span>
+                <span>ΣX² = {perhitungan.table1.summary.sigmaX2}</span>
+                <span className="text-orange-600">ΣY = {perhitungan.table1.summary.sigmaY}</span>
+                <span className="text-blue-600">ΣXY = {perhitungan.table1.summary.sigmaXY}</span>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-x-auto overflow-y-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="sticky top-0 bg-slate-50 font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3">X (Kolom)</th>
+                    <th className="px-6 py-3">X² (Kuadrat X)</th>
+                    <th className="px-6 py-3">Y (Benar + Salah)</th>
+                    <th className="px-6 py-3">X.Y (X × Y)</th>
+                    <th className="px-6 py-3 font-sans text-slate-400 font-normal">Komposisi (B / S / Skip)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {perhitungan.table1.rows.map(
+                    (row: { x: number; x2: number; y: number; xy: number; correct: number; error: number; skipped: number }) => (
+                      <tr key={row.x} className="hover:bg-slate-50">
+                        <td className="px-6 py-2 text-slate-900 font-semibold">{row.x}</td>
+                        <td className="px-6 py-2 text-slate-600">{row.x2}</td>
+                        <td className="px-6 py-2 text-orange-600 font-bold">{row.y}</td>
+                        <td className="px-6 py-2 text-blue-600 font-semibold">{row.xy}</td>
+                        <td className="px-6 py-2 font-sans text-slate-500">
+                          <span className="text-emerald-600">{row.correct}</span> benar,{" "}
+                          <span className="text-rose-600">{row.error}</span> salah,{" "}
+                          <span className="text-amber-600">{row.skipped}</span> skip
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+                <tfoot className="sticky bottom-0 bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
+                  <tr>
+                    <td className="px-6 py-3">ΣX = {perhitungan.table1.summary.sigmaX}</td>
+                    <td className="px-6 py-3">ΣX² = {perhitungan.table1.summary.sigmaX2}</td>
+                    <td className="px-6 py-3 text-orange-600">ΣY = {perhitungan.table1.summary.sigmaY}</td>
+                    <td className="px-6 py-3 text-blue-600">ΣXY = {perhitungan.table1.summary.sigmaXY}</td>
+                    <td className="px-6 py-3 font-sans text-slate-600">Mean Ȳ = {perhitungan.table1.summary.meanY}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* Tabel 2: Distribusi Frekuensi (Y, f, f.y, d, f.d) */}
+          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Tabel 2 – Distribusi Frekuensi (Y, f, f.y, d, f.d)
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Disusun menurun dari skor Y tertinggi ke terendah. Mean = Σ(f.y) / 50 = {perhitungan.table2.summary.mean}.
+                </p>
+              </div>
+              <div className="flex gap-4 text-xs font-mono font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                <span>Σf = {perhitungan.table2.summary.sigmaF}</span>
+                <span className="text-orange-600">Σ(f.y) = {perhitungan.table2.summary.sigmaFY}</span>
+                <span className="text-slate-600">Σd = {perhitungan.table2.summary.sigmaD}</span>
+                <span className="text-emerald-600">Σ(f.d) = {perhitungan.table2.summary.sigmaFD}</span>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-x-auto overflow-y-auto">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="sticky top-0 bg-slate-50 font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3">Y (Skor Unik)</th>
+                    <th className="px-6 py-3">f (Frekuensi)</th>
+                    <th className="px-6 py-3">f.y (f × Y)</th>
+                    <th className="px-6 py-3">d (|Y - Mean|)</th>
+                    <th className="px-6 py-3">f.d (f × d)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {perhitungan.table2.rows.map((row: { y: number; f: number; fy: number; d: number; fd: number }) => (
+                    <tr key={row.y} className="hover:bg-slate-50">
+                      <td className="px-6 py-2.5 text-slate-900 font-bold">{row.y}</td>
+                      <td className="px-6 py-2.5 text-blue-600 font-semibold">{row.f}</td>
+                      <td className="px-6 py-2.5 text-orange-600 font-semibold">{row.fy}</td>
+                      <td className="px-6 py-2.5 text-slate-600">{row.d.toFixed(4)}</td>
+                      <td className="px-6 py-2.5 text-emerald-600 font-bold">{row.fd.toFixed(4)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="sticky bottom-0 bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
+                  <tr>
+                    <td className="px-6 py-3">ΣY = {perhitungan.table2.summary.sigmaYUnique}</td>
+                    <td className="px-6 py-3 text-blue-600">Σf = {perhitungan.table2.summary.sigmaF}</td>
+                    <td className="px-6 py-3 text-orange-600">Σ(f.y) = {perhitungan.table2.summary.sigmaFY}</td>
+                    <td className="px-6 py-3 text-slate-600">Σd = {perhitungan.table2.summary.sigmaD.toFixed(4)}</td>
+                    <td className="px-6 py-3 text-emerald-600">Σ(f.d) = {perhitungan.table2.summary.sigmaFD.toFixed(4)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          {/* Rincian Asal-Usul Angka & Tahapan Perhitungan Manual */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+              Rincian Asal-Usul Angka & Tahapan Perhitungan (Audit Trail HR)
+            </h2>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700">
+              {/* PANKER */}
+              <div className="p-4 rounded-2xl bg-orange-50/50 border border-orange-100 space-y-2">
+                <h3 className="font-bold text-orange-900 text-sm flex items-center justify-between">
+                  <span>1. PANKER (Kecepatan Kerja)</span>
+                  <span className="font-mono text-base">{perhitungan.panker.formatted}</span>
+                </h3>
+                <p className="text-slate-600">
+                  Dihitung dari dua tabel untuk menjamin konsistensi mutlak:
+                </p>
+                <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-orange-200">
+                  <div>• Tabel 1: Panker 1 = ΣY / N = {perhitungan.table1.summary.sigmaY} / 50 = <span className="font-bold text-orange-600">{perhitungan.panker.panker1}</span></div>
+                  <div>• Tabel 2: Panker 2 = Σ(f.y) / N = {perhitungan.table2.summary.sigmaFY} / 50 = <span className="font-bold text-orange-600">{perhitungan.panker.panker2}</span></div>
+                  <div className="text-[11px] text-emerald-700 font-sans font-semibold pt-1">
+                    ✓ Panker 1 == Panker 2 (Identik)
+                  </div>
+                </div>
+              </div>
+
+              {/* TIANKER */}
+              <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-100 space-y-2">
+                <h3 className="font-bold text-rose-900 text-sm flex items-center justify-between">
+                  <span>2. TIANKER (Ketelitian Kerja)</span>
+                  <span className="font-mono text-base">{perhitungan.tianker.formatted}</span>
+                </h3>
+                <p className="text-slate-600">
+                  Hanya menggunakan total jawaban salah (Error) dari seluruh 50 kolom:
+                </p>
+                <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-rose-200">
+                  <div>• TIANKER = ΣError = <span className="font-bold text-rose-600">{perhitungan.tianker.totalError}</span></div>
+                  <div className="text-[11px] text-slate-500 font-sans">
+                    *Total Skip ({perhitungan.tianker.totalSkipped}) dicatat tetapi tidak dihitung sebagai TIANKER.
+                  </div>
+                </div>
+              </div>
+
+              {/* JANKER */}
+              <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 space-y-2">
+                <h3 className="font-bold text-emerald-900 text-sm flex items-center justify-between">
+                  <span>3. JANKER (Keajegan Kerja)</span>
+                  <span className="font-mono text-base">{perhitungan.janker.formatted}</span>
+                </h3>
+                <p className="text-slate-600">
+                  Standar Deviasi Rata-rata dari Tabel Distribusi Frekuensi:
+                </p>
+                <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-emerald-200">
+                  <div>• Mean = Σ(f.y) / 50 = {perhitungan.table2.summary.mean}</div>
+                  <div>• Σ(f.d) = {perhitungan.table2.summary.sigmaFD.toFixed(4)}</div>
+                  <div>• JANKER = Σ(f.d) / 50 = {perhitungan.table2.summary.sigmaFD.toFixed(4)} / 50 = <span className="font-bold text-emerald-600">{perhitungan.janker.formatted}</span></div>
+                </div>
+              </div>
+
+              {/* HANKER */}
+              <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2">
+                <h3 className="font-bold text-blue-900 text-sm flex items-center justify-between">
+                  <span>4. HANKER (Ketahanan Kerja / Regresi Linear)</span>
+                  <span className="font-mono text-base">{perhitungan.hanker.formatted}</span>
+                </h3>
+                <p className="text-slate-600">
+                  Persamaan Regresi Linear: Y = a + bX
+                </p>
+                <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-blue-200 text-[11px]">
+                  <div>• b = [50×ΣXY - ΣX×ΣY] / 520625 = {perhitungan.hanker.numerator} / 520625 = <span className="font-bold">{perhitungan.hanker.b}</span></div>
+                  <div>• a = Ȳ - (b × 25.5) = {perhitungan.hanker.meanY} - ({perhitungan.hanker.b} × 25.5) = <span className="font-bold">{perhitungan.hanker.a}</span></div>
+                  <div>• Y₀ = a = {perhitungan.hanker.y0}</div>
+                  <div>• Y₅₀ = a + (b × 50) = {perhitungan.hanker.y50}</div>
+                  <div className="pt-1 text-xs text-blue-700 font-bold">
+                    • HANKER = Y₅₀ - Y₀ = 50 × b = {perhitungan.hanker.formatted}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

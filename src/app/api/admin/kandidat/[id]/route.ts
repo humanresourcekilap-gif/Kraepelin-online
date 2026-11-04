@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/server/admin-session";
 import { supabaseAdmin } from "@/lib/server/supabase-admin";
 import { hitungRekapScoring, type JawabanKandidat } from "@/lib/server/kraepelin-scoring";
+import { calculateKraepelin, type KraepelinColumnInput } from "@/lib/server/kraepelin";
 
 type ColumnBreakdownItem = {
   kolom: number;
@@ -111,6 +112,23 @@ export async function GET(
         }
       : null;
 
+    // 4. Hitung Tabel 1, Tabel 2, dan rincian audit jika data terdiri dari 50 kolom
+    let perhitungan = null;
+    if (breakdownPerKolom.length === 50) {
+      try {
+        const dataKolom: KraepelinColumnInput[] = breakdownPerKolom.map((col) => ({
+          column: col.kolom,
+          correct: col.benar,
+          error: col.salah,
+          lastAnsweredPair: col.posisiTerakhir,
+          skipped: col.skipDiperhitungkan,
+        }));
+        perhitungan = calculateKraepelin(dataKolom);
+      } catch (calcError) {
+        console.warn("Gagal menghitung modul Kraepelin lengkap:", calcError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       candidate: {
@@ -119,6 +137,7 @@ export async function GET(
       },
       sesi: sesiResponse,
       breakdownPerKolom,
+      perhitungan,
     });
   } catch (error) {
     console.error("Gagal di endpoint detail kandidat:", error);
