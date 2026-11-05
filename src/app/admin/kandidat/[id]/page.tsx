@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Briefcase,
   HelpCircle,
+  Calculator,
 } from "lucide-react";
 import { hitungInterpretasiKraepelin } from "@/lib/kraepelin-interpretasi";
 import {
@@ -104,6 +105,7 @@ export default function CandidateDetailPage({
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [activeTab, setActiveTab] = useState<"ringkasan" | "audit">("ringkasan");
 
   useEffect(() => {
     let active = true;
@@ -203,6 +205,12 @@ export default function CandidateDetailPage({
     skip: item.skipDiperhitungkan,
     terjawab: item.terjawab,
   }));
+
+  // Hitung akumulasi total benar, salah, dan terjawab dari seluruh 50 kolom
+  const totalBenar = breakdown.reduce((sum, item) => sum + item.benar, 0);
+  const totalSalah = breakdown.reduce((sum, item) => sum + item.salah, 0);
+  const totalTerjawab = totalBenar + totalSalah;
+  const persentaseAkurasi = totalTerjawab > 0 ? ((totalBenar / totalTerjawab) * 100).toFixed(1) : "0.0";
 
   const pankerVal = session?.panker !== null && session?.panker !== undefined ? Number(session.panker) : null;
   const tiankerVal = session?.tianker !== null && session?.tianker !== undefined ? Number(session.tianker) : null;
@@ -345,716 +353,809 @@ export default function CandidateDetailPage({
         </div>
       </div>
 
-      {/* 4 Kartu Indikator Psikometri Kraepelin */}
-      <div>
-        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">
-          Hasil & Indikator Psikometri Kraepelin
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {/* PANKER */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
-                PANKER (Kecepatan)
-              </span>
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
-                <TrendingUp size={15} />
-              </div>
-            </div>
-            <div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                {pankerVal !== null ? pankerVal : "-"}
-              </p>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Rata-rata jawaban benar / kolom</p>
-            </div>
-            {norma.panker?.category && (
-              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
-                <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.panker.category)}`}>
-                  {norma.panker.category}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* TIANKER */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
-                TIANKER (Ketelitian)
-              </span>
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <Target size={15} />
-              </div>
-            </div>
-            <div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                {tiankerVal !== null ? tiankerVal : "-"}
-              </p>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Total kesalahan</p>
-            </div>
-            {norma.tianker?.category && (
-              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
-                <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.tianker.category)}`}>
-                  {norma.tianker.category}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* JANKER */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
-                JANKER (Kestabilan)
-              </span>
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
-                <Activity size={15} />
-              </div>
-            </div>
-            <div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                {jankerVal !== null ? jankerVal : "-"}
-              </p>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Deviasi rata-rata</p>
-            </div>
-            {(norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category) && (
-              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
-                <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category || "")}`}>
-                  {norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* HANKER */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
-                HANKER (Ketahanan)
-              </span>
-              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                <BarChart3 size={15} />
-              </div>
-            </div>
-            <div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                {hankerVal !== null ? hankerVal : "-"}
-              </p>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Kemiringan kurva kerja</p>
-            </div>
-            {norma.hanker?.category && (
-              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
-                <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.hanker.category)}`}>
-                  {norma.hanker.category}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Menu Tab Navigasi (Hidden on Print) */}
+      <div className="flex items-center gap-2 border-b border-slate-200 print:hidden pb-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab("ringkasan")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition ${
+            activeTab === "ringkasan"
+              ? "border-orange-500 text-orange-600 bg-orange-50/50 rounded-t-xl"
+              : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+          }`}
+        >
+          <BarChart3 size={16} />
+          Ringkasan Hasil & Kurva Kerja
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("audit")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-bold border-b-2 transition ${
+            activeTab === "audit"
+              ? "border-orange-500 text-orange-600 bg-orange-50/50 rounded-t-xl"
+              : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+          }`}
+        >
+          <Calculator size={16} />
+          Audit & Rincian Perhitungan Matematis
+          {perhitungan?.validation?.isValid && (
+            <span className="rounded-full bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 font-bold">
+              Valid
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* Evaluasi Psikologis & Rekomendasi HR */}
-      {interpretasi && (
-        <div className="rounded-2xl sm:rounded-3xl border border-orange-200/90 bg-gradient-to-br from-white via-orange-50/20 to-amber-50/30 p-5 sm:p-8 shadow-sm space-y-6">
-          {/* Executive Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-100 pb-5">
+      {/* SECTION 1: RINGKASAN EKSEKUTIF (Aktif saat tab Ringkasan, & SELALU TERCETAK SAAT PRINT / EXPORT PDF) */}
+      <div className={`space-y-8 ${activeTab === "ringkasan" ? "block" : "hidden print:block"}`}>
+        {/* 1. Kurva Kerja Kraepelin (50 Kolom) - DITARUH PALING ATAS */}
+        <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm print:break-inside-avoid">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm">
-                  <Sparkles size={14} />
-                </span>
-                <span className="text-xs font-extrabold uppercase tracking-wider text-orange-600">
-                  Evaluasi Psikologis & Rekomendasi HR
-                </span>
-              </div>
-              <h3 className="mt-1.5 text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {interpretasi.tipeGayaKerja}
-              </h3>
+              <h2 className="text-base font-bold text-slate-900">
+                Kurva Kerja Kraepelin (50 Kolom)
+              </h2>
+              <p className="text-xs text-slate-500">
+                Visualisasi dinamika kecepatan kerja (jawaban benar) per kolom dari awal hingga akhir tes
+              </p>
             </div>
-
-            {/* Status Rekomendasi Pill */}
-            <div
-              className={`inline-flex items-center gap-2 rounded-2xl border px-4 py-2 font-bold text-xs sm:text-sm shadow-sm ${interpretasi.warnaBadge.bg} ${interpretasi.warnaBadge.text} ${interpretasi.warnaBadge.border}`}
-            >
-              <span className={`h-2.5 w-2.5 rounded-full ${interpretasi.warnaBadge.dot}`} />
-              {interpretasi.labelRekomendasi}
-            </div>
-          </div>
-
-          {/* Ringkasan Karakter & Dinamika Kerja */}
-          <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-sm">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-              Ringkasan Karakter & Dinamika Kerja
-            </h4>
-            <p className="text-xs sm:text-sm leading-relaxed text-slate-700">
-              {interpretasi.ringkasanEksekutif}
-            </p>
-          </div>
-
-          {/* 4 Pilar Analisis Mendalam */}
-          <div>
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-              Analisis Per Dimensi Psikometri
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-              {/* Kecepatan */}
-              <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs sm:text-sm text-slate-800">
-                    {interpretasi.aspek.kecepatan.nama}
-                  </span>
-                  <span className="rounded-md bg-orange-100 text-orange-800 px-2 py-0.5 text-[10px] font-bold">
-                    {interpretasi.aspek.kecepatan.labelKategori}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {interpretasi.aspek.kecepatan.analisis}
-                </p>
-              </div>
-
-              {/* Ketelitian */}
-              <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs sm:text-sm text-slate-800">
-                    {interpretasi.aspek.ketelitian.nama}
-                  </span>
-                  <span className="rounded-md bg-blue-100 text-blue-800 px-2 py-0.5 text-[10px] font-bold">
-                    {interpretasi.aspek.ketelitian.labelKategori}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {interpretasi.aspek.ketelitian.analisis}
-                </p>
-              </div>
-
-              {/* Kestabilan */}
-              <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs sm:text-sm text-slate-800">
-                    {interpretasi.aspek.kestabilan.nama}
-                  </span>
-                  <span className="rounded-md bg-purple-100 text-purple-800 px-2 py-0.5 text-[10px] font-bold">
-                    {interpretasi.aspek.kestabilan.labelKategori}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {interpretasi.aspek.kestabilan.analisis}
-                </p>
-              </div>
-
-              {/* Ketahanan */}
-              <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs sm:text-sm text-slate-800">
-                    {interpretasi.aspek.ketahanan.nama}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="rounded-md bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-bold">
-                      {interpretasi.aspek.ketahanan.labelKategori}
-                    </span>
-                    <span className="rounded-md bg-slate-100 text-slate-700 px-1.5 py-0.5 text-[10px] font-semibold">
-                      Tren: {interpretasi.aspek.ketahanan.trenKurva}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  {interpretasi.aspek.ketahanan.analisis}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Kekuatan vs Area Perhatian */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Kekuatan Utama */}
-            <div className="rounded-2xl bg-emerald-50/50 border border-emerald-200/80 p-4 sm:p-5 space-y-3">
-              <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs sm:text-sm">
-                <CheckCircle2 size={16} className="text-emerald-600" />
-                <span>Kekuatan & Keunggulan Kerja</span>
-              </div>
-              <ul className="space-y-2 text-xs text-slate-700">
-                {interpretasi.kekuatanUtama.map((point, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-emerald-600 font-bold mt-0.5">•</span>
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Area Perhatian / Risiko */}
-            <div className="rounded-2xl bg-amber-50/50 border border-amber-200/80 p-4 sm:p-5 space-y-3">
-              <div className="flex items-center gap-2 text-amber-800 font-bold text-xs sm:text-sm">
-                <AlertCircle size={16} className="text-amber-600" />
-                <span>Area Perhatian & Mitigasi Risiko</span>
-              </div>
-              <ul className="space-y-2 text-xs text-slate-700">
-                {interpretasi.areaPengembangan.map((point, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="text-amber-600 font-bold mt-0.5">•</span>
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Saran Penempatan Posisi */}
-          <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 space-y-3 shadow-sm">
-            <div className="flex items-center gap-2 text-slate-800 font-bold text-xs sm:text-sm">
-              <Briefcase size={16} className="text-orange-500" />
-              <span>Saran Kesesuaian Posisi Kerja (Job Fit)</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {interpretasi.rekomendasiPenempatan.map((pos, idx) => (
-                <span
-                  key={idx}
-                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700"
-                >
-                  {pos}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Panduan Pertanyaan Wawancara HR */}
-          <div className="rounded-2xl bg-white border border-orange-200 p-4 sm:p-5 space-y-3 shadow-sm">
-            <div className="flex items-center gap-2 text-orange-800 font-bold text-xs sm:text-sm">
-              <HelpCircle size={16} className="text-orange-600" />
-              <span>Panduan Pendalaman Wawancara HR (Interview Probing Points)</span>
-            </div>
-            <p className="text-[11px] text-slate-500">
-              Gunakan pertanyaan berikut saat sesi wawancara untuk mengklarifikasi potensi risiko atau memvalidasi keunggulan kerja kandidat:
-            </p>
-            <div className="space-y-2">
-              {interpretasi.panduanWawancaraHR.map((q, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-xl border border-orange-100 bg-orange-50/40 p-3 text-xs text-slate-700 leading-relaxed flex items-start gap-2.5"
-                >
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-200 text-orange-800 font-bold text-[10px]">
-                    {idx + 1}
-                  </span>
-                  <p>{q}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Visualisasi Kurva Kerja Kraepelin (50 Kolom) */}
-      <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">
-              Kurva Kerja Kraepelin (50 Kolom)
-            </h2>
-            <p className="text-xs text-slate-500">
-              Visualisasi dinamika kecepatan kerja (jawaban benar) per kolom dari awal hingga akhir tes
-            </p>
-          </div>
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <div className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-full bg-orange-500" />
-              <span className="text-slate-700">Jawaban Benar (Y)</span>
-            </div>
-            {pankerVal !== null && (
+            <div className="flex items-center gap-4 text-xs font-semibold">
               <div className="flex items-center gap-1.5">
-                <span className="h-0.5 w-4 bg-emerald-500 border border-emerald-500" />
-                <span className="text-slate-700">Rata-rata PANKER ({pankerVal})</span>
+                <span className="h-3 w-3 rounded-full bg-orange-500" />
+                <span className="text-slate-700">Jawaban Benar</span>
               </div>
-            )}
+              {pankerVal !== null && (
+                <div className="flex items-center gap-1.5">
+                  <span className="h-0.5 w-4 bg-emerald-500 border border-emerald-500" />
+                  <span className="text-slate-700">Rata-rata PANKER ({pankerVal})</span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {chartData.length === 0 ? (
-          <div className="py-16 text-center text-xs text-slate-400">
-            Belum ada rekaman jawaban kolom untuk divisualisasikan.
-          </div>
-        ) : (
-          <div className="mt-6 h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis
-                  dataKey="kolomNomor"
-                  tick={{ fontSize: 11, fill: "#64748b" }}
-                  interval={4}
-                  stroke="#cbd5e1"
-                />
-                <YAxis
-                  domain={[0, 27]}
-                  tick={{ fontSize: 11, fill: "#64748b" }}
-                  stroke="#cbd5e1"
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload as ColumnBreakdown;
-                      return (
-                        <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-lg text-xs space-y-1">
-                          <p className="font-bold text-slate-900 border-b pb-1">
-                            Kolom {data.kolom}
-                          </p>
-                          <p className="text-emerald-600 font-semibold">
-                            Benar: {data.benar}
-                          </p>
-                          <p className="text-rose-600 font-semibold">
-                            Salah: {data.salah}
-                          </p>
-                          <p className="text-amber-600 font-semibold">
-                            Terlewat: {data.skipDiperhitungkan}
-                          </p>
-                          <p className="text-slate-500 pt-1 border-t text-[11px]">
-                            Posisi Jawaban Terakhir: {data.posisiTerakhir} / 27
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                {pankerVal !== null && (
-                  <ReferenceLine
-                    y={pankerVal}
-                    stroke="#10b981"
-                    strokeDasharray="4 4"
-                    label={{
-                      value: `Mean: ${pankerVal}`,
-                      position: "insideTopRight",
-                      fill: "#10b981",
-                      fontSize: 11,
+          {chartData.length === 0 ? (
+            <div className="py-16 text-center text-xs text-slate-400">
+              Belum ada rekaman jawaban kolom untuk divisualisasikan.
+            </div>
+          ) : (
+            <div className="mt-6 h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis
+                    dataKey="kolomNomor"
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    interval={4}
+                    stroke="#cbd5e1"
+                  />
+                  <YAxis
+                    domain={[0, 27]}
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    stroke="#cbd5e1"
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload as ColumnBreakdown;
+                        return (
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-lg text-xs space-y-1">
+                            <p className="font-bold text-slate-900 border-b pb-1">
+                              Kolom {data.kolom}
+                            </p>
+                            <p className="text-emerald-600 font-semibold">
+                              Benar: {data.benar}
+                            </p>
+                            <p className="text-rose-600 font-semibold">
+                              Salah: {data.salah}
+                            </p>
+                            <p className="text-amber-600 font-semibold">
+                              Terlewat: {data.skipDiperhitungkan}
+                            </p>
+                            <p className="text-slate-500 pt-1 border-t text-[11px]">
+                              Posisi Jawaban Terakhir: {data.posisiTerakhir} / 27
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
                     }}
                   />
-                )}
-                <Line
-                  type="monotone"
-                  dataKey="benar"
-                  stroke="#f97316"
-                  strokeWidth={2.5}
-                  dot={{ r: 2.5, fill: "#f97316" }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
+                  {pankerVal !== null && (
+                    <ReferenceLine
+                      y={pankerVal}
+                      stroke="#10b981"
+                      strokeDasharray="4 4"
+                      label={{
+                        value: `Mean: ${pankerVal}`,
+                        position: "insideTopRight",
+                        fill: "#10b981",
+                        fontSize: 11,
+                      }}
+                    />
+                  )}
+                  <Line
+                    type="monotone"
+                    dataKey="benar"
+                    stroke="#f97316"
+                    strokeWidth={2.5}
+                    dot={{ r: 2.5, fill: "#f97316" }}
+                    activeDot={{ r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
 
-      {/* Rincian 50 Kolom (Tabel Terperinci) */}
-      <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="border-b border-slate-100 px-6 py-4">
-          <h2 className="text-base font-bold text-slate-900">
-            Rincian Lengkap Jawaban Tiap Kolom (1–50)
+        {/* 2. Hasil & Indikator Psikometri Kraepelin */}
+        <div className="print:break-inside-avoid">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">
+            Hasil & Indikator Psikometri Kraepelin
           </h2>
-          <p className="text-xs text-slate-500">
-            Detail perhitungan perolehan angka benar, salah, dan skip per interval kolom
-          </p>
-        </div>
-
-        <div className="max-h-96 overflow-x-auto overflow-y-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="sticky top-0 bg-slate-50 font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-3">Nomor Kolom</th>
-                <th className="px-6 py-3">Benar</th>
-                <th className="px-6 py-3">Salah</th>
-                <th className="px-6 py-3">Terlewat (Skip)</th>
-                <th className="px-6 py-3">Total Terjawab</th>
-                <th className="px-6 py-3">Posisi Terakhir</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {breakdown.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-slate-400">
-                    Tidak ada rincian jawaban tersimpan.
-                  </td>
-                </tr>
-              ) : (
-                breakdown.map((row) => (
-                  <tr key={row.kolom} className="hover:bg-slate-50">
-                    <td className="px-6 py-2.5 font-bold text-slate-900">
-                      Kolom {row.kolom}
-                    </td>
-                    <td className="px-6 py-2.5 font-semibold text-emerald-600">
-                      {row.benar}
-                    </td>
-                    <td className="px-6 py-2.5 font-semibold text-rose-600">
-                      {row.salah}
-                    </td>
-                    <td className="px-6 py-2.5 font-semibold text-amber-600">
-                      {row.skipDiperhitungkan}
-                    </td>
-                    <td className="px-6 py-2.5 text-slate-700">
-                      {row.terjawab}
-                    </td>
-                    <td className="px-6 py-2.5 text-slate-700">
-                      {row.posisiTerakhir} / 27
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* MODUL PERHITUNGAN AKADEMIS KRAEPELIN: TABEL 1, TABEL 2, & AUDIT MATEMATIS */}
-      {perhitungan && (
-        <div className="space-y-8">
-          {/* Audit & Validasi Matematis Checklist */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
-              <div>
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <CheckCircle2 size={18} className="text-emerald-500" />
-                  Audit & Validasi Konsistensi Matematis
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Verifikasi otomatis seluruh konsistensi antar-aspek (Tabel 1, Tabel 2, Panker, Tianker, Janker, Hanker)
-                </p>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {/* PANKER */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  PANKER (Kecepatan)
+                </span>
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
+                  <TrendingUp size={15} />
+                </div>
               </div>
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
-                  perhitungan.validation.isValid
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border border-rose-200"
-                }`}
-              >
-                {perhitungan.validation.isValid ? "100% VALID & KONSISTEN" : "ADA KETIDAKSESUAIAN"}
-              </span>
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                  {pankerVal !== null ? pankerVal : "-"}
+                </p>
+                <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Rata-rata jawaban / kolom</p>
+              </div>
+              {norma.panker?.category && (
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
+                  <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.panker.category)}`}>
+                    {norma.panker.category}
+                  </span>
+                </div>
+              )}
             </div>
 
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {perhitungan.validation.checks.map(
-                (check: { name: string; expected: string | number; actual: string | number; valid: boolean }, idx: number) => (
+            {/* TIANKER */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  TIANKER (Ketelitian)
+                </span>
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                  <Target size={15} />
+                </div>
+              </div>
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                  {tiankerVal !== null ? tiankerVal : "-"}
+                </p>
+                <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Total kesalahan (Error)</p>
+              </div>
+              {norma.tianker?.category && (
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
+                  <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.tianker.category)}`}>
+                    {norma.tianker.category}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* JANKER */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  JANKER (Kestabilan)
+                </span>
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
+                  <Activity size={15} />
+                </div>
+              </div>
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                  {jankerVal !== null ? jankerVal : "-"}
+                </p>
+                <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Deviasi rata-rata</p>
+              </div>
+              {(norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category) && (
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
+                  <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category || "")}`}>
+                    {norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* HANKER */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  HANKER (Ketahanan)
+                </span>
+                <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                  <BarChart3 size={15} />
+                </div>
+              </div>
+              <div>
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                  {hankerVal !== null ? hankerVal : "-"}
+                </p>
+                <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Kemiringan kurva kerja</p>
+              </div>
+              {norma.hanker?.category && (
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
+                  <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.hanker.category)}`}>
+                    {norma.hanker.category}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Rekap Akumulasi Jawaban: Total Benar, Total Salah, Total Terjawab, Tingkat Akurasi */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-3 sm:mt-4">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3.5 sm:p-4 shadow-sm">
+              <span className="text-[10px] sm:text-xs font-bold text-emerald-700 uppercase tracking-wider block">
+                Total Jawaban Benar
+              </span>
+              <p className="text-2xl sm:text-3xl font-black text-emerald-800 mt-1">
+                {totalBenar}
+              </p>
+              <p className="text-[10px] text-emerald-600 mt-0.5">dari 50 kolom pengerjaan</p>
+            </div>
+
+            <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-3.5 sm:p-4 shadow-sm">
+              <span className="text-[10px] sm:text-xs font-bold text-rose-700 uppercase tracking-wider block">
+                Total Jawaban Salah
+              </span>
+              <p className="text-2xl sm:text-3xl font-black text-rose-800 mt-1">
+                {totalSalah}
+              </p>
+              <p className="text-[10px] text-rose-600 mt-0.5">kesalahan penjumlahan (TIANKER)</p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5 sm:p-4 shadow-sm">
+              <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Total Terjawab (Y)
+              </span>
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+                {totalTerjawab}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Benar + Salah (ΣY Tabel 1)</p>
+            </div>
+
+            <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-3.5 sm:p-4 shadow-sm">
+              <span className="text-[10px] sm:text-xs font-bold text-blue-700 uppercase tracking-wider block">
+                Tingkat Akurasi
+              </span>
+              <p className="text-2xl sm:text-3xl font-black text-blue-800 mt-1">
+                {persentaseAkurasi}%
+              </p>
+              <p className="text-[10px] text-blue-600 mt-0.5">rasio ketepatan pengerjaan</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Evaluasi Profil Kerja & Interpretasi Psikologis (Tanpa badge "Kurang Direkomendasikan" dll) */}
+        {interpretasi && (
+          <div className="rounded-2xl sm:rounded-3xl border border-orange-200/90 bg-gradient-to-br from-white via-orange-50/20 to-amber-50/30 p-5 sm:p-8 shadow-sm space-y-6 print:break-inside-avoid">
+            {/* Executive Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-100 pb-5">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm">
+                    <Sparkles size={14} />
+                  </span>
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-orange-600">
+                    Evaluasi Profil Kerja & Dinamika Psikologis
+                  </span>
+                </div>
+                <h3 className="mt-1.5 text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  {interpretasi.tipeGayaKerja}
+                </h3>
+              </div>
+            </div>
+
+            {/* Ringkasan Karakter & Dinamika Kerja */}
+            <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-sm">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                Ringkasan Karakter & Dinamika Kerja
+              </h4>
+              <p className="text-xs sm:text-sm leading-relaxed text-slate-700">
+                {interpretasi.ringkasanEksekutif}
+              </p>
+            </div>
+
+            {/* 4 Pilar Analisis Mendalam */}
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                Analisis Per Dimensi Psikometri
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                {/* Kecepatan */}
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs sm:text-sm text-slate-800">
+                      {interpretasi.aspek.kecepatan.nama}
+                    </span>
+                    <span className="rounded-md bg-orange-100 text-orange-800 px-2 py-0.5 text-[10px] font-bold">
+                      {interpretasi.aspek.kecepatan.labelKategori}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {interpretasi.aspek.kecepatan.analisis}
+                  </p>
+                </div>
+
+                {/* Ketelitian */}
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs sm:text-sm text-slate-800">
+                      {interpretasi.aspek.ketelitian.nama}
+                    </span>
+                    <span className="rounded-md bg-blue-100 text-blue-800 px-2 py-0.5 text-[10px] font-bold">
+                      {interpretasi.aspek.ketelitian.labelKategori}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {interpretasi.aspek.ketelitian.analisis}
+                  </p>
+                </div>
+
+                {/* Kestabilan */}
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs sm:text-sm text-slate-800">
+                      {interpretasi.aspek.kestabilan.nama}
+                    </span>
+                    <span className="rounded-md bg-purple-100 text-purple-800 px-2 py-0.5 text-[10px] font-bold">
+                      {interpretasi.aspek.kestabilan.labelKategori}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {interpretasi.aspek.kestabilan.analisis}
+                  </p>
+                </div>
+
+                {/* Ketahanan */}
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs sm:text-sm text-slate-800">
+                      {interpretasi.aspek.ketahanan.nama}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded-md bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-bold">
+                        {interpretasi.aspek.ketahanan.labelKategori}
+                      </span>
+                      <span className="rounded-md bg-slate-100 text-slate-700 px-1.5 py-0.5 text-[10px] font-semibold">
+                        Tren: {interpretasi.aspek.ketahanan.trenKurva}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {interpretasi.aspek.ketahanan.analisis}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Kekuatan vs Area Perhatian */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Kekuatan Utama */}
+              <div className="rounded-2xl bg-emerald-50/50 border border-emerald-200/80 p-4 sm:p-5 space-y-3">
+                <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs sm:text-sm">
+                  <CheckCircle2 size={16} className="text-emerald-600" />
+                  <span>Kekuatan & Keunggulan Kerja</span>
+                </div>
+                <ul className="space-y-2 text-xs text-slate-700">
+                  {interpretasi.kekuatanUtama.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-emerald-600 font-bold mt-0.5">•</span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Area Perhatian / Risiko */}
+              <div className="rounded-2xl bg-amber-50/50 border border-amber-200/80 p-4 sm:p-5 space-y-3">
+                <div className="flex items-center gap-2 text-amber-800 font-bold text-xs sm:text-sm">
+                  <AlertCircle size={16} className="text-amber-600" />
+                  <span>Area Perhatian & Mitigasi Risiko</span>
+                </div>
+                <ul className="space-y-2 text-xs text-slate-700">
+                  {interpretasi.areaPengembangan.map((point, idx) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-amber-600 font-bold mt-0.5">•</span>
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Saran Penempatan Posisi */}
+            <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 space-y-3 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-800 font-bold text-xs sm:text-sm">
+                <Briefcase size={16} className="text-orange-500" />
+                <span>Saran Kesesuaian Posisi Kerja (Job Fit)</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {interpretasi.rekomendasiPenempatan.map((pos, idx) => (
+                  <span
+                    key={idx}
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700"
+                  >
+                    {pos}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Panduan Pertanyaan Wawancara HR */}
+            <div className="rounded-2xl bg-white border border-orange-200 p-4 sm:p-5 space-y-3 shadow-sm">
+              <div className="flex items-center gap-2 text-orange-800 font-bold text-xs sm:text-sm">
+                <HelpCircle size={16} className="text-orange-600" />
+                <span>Panduan Pendalaman Wawancara HR (Interview Probing Points)</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Gunakan pertanyaan berikut saat sesi wawancara untuk mengklarifikasi potensi risiko atau memvalidasi keunggulan kerja kandidat:
+              </p>
+              <div className="space-y-2">
+                {interpretasi.panduanWawancaraHR.map((q, idx) => (
                   <div
                     key={idx}
-                    className={`p-3 rounded-2xl border text-xs ${
-                      check.valid
-                        ? "bg-slate-50/60 border-slate-200 text-slate-800"
-                        : "bg-rose-50 border-rose-200 text-rose-800"
-                    }`}
+                    className="rounded-xl border border-orange-100 bg-orange-50/40 p-3 text-xs text-slate-700 leading-relaxed flex items-start gap-2.5"
                   >
-                    <div className="flex items-center justify-between font-semibold">
-                      <span>{check.name}</span>
-                      {check.valid ? (
-                        <Check size={14} className="text-emerald-600 shrink-0" />
-                      ) : (
-                        <AlertCircle size={14} className="text-rose-600 shrink-0" />
-                      )}
-                    </div>
-                    <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
-                      <span>Harapan: {check.expected}</span>
-                      <span className="font-mono font-medium">Aktual: {check.actual}</span>
-                    </div>
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-200 text-orange-800 font-bold text-[10px]">
+                      {idx + 1}
+                    </span>
+                    <p>{q}</p>
                   </div>
-                )
-              )}
+                ))}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Tabel 1: Hasil Lembar Kerja (X, X², Y, X.Y) */}
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <h2 className="text-base font-bold text-slate-900">
-                  Tabel 1 – Hasil Lembar Kerja (X, X², Y, X.Y)
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Y = Benar + Salah (total jawaban terisi per kolom). Skip tidak masuk dalam perhitungan Y.
-                </p>
-              </div>
-              <div className="flex gap-4 text-xs font-mono font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                <span>ΣX = {perhitungan.table1.summary.sigmaX}</span>
-                <span>ΣX² = {perhitungan.table1.summary.sigmaX2}</span>
-                <span className="text-orange-600">ΣY = {perhitungan.table1.summary.sigmaY}</span>
-                <span className="text-blue-600">ΣXY = {perhitungan.table1.summary.sigmaXY}</span>
-              </div>
-            </div>
-
-            <div className="max-h-96 overflow-x-auto overflow-y-auto">
-              <table className="w-full text-left text-xs font-mono">
-                <thead className="sticky top-0 bg-slate-50 font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
-                  <tr>
-                    <th className="px-6 py-3">X (Kolom)</th>
-                    <th className="px-6 py-3">X² (Kuadrat X)</th>
-                    <th className="px-6 py-3">Y (Benar + Salah)</th>
-                    <th className="px-6 py-3">X.Y (X × Y)</th>
-                    <th className="px-6 py-3 font-sans text-slate-400 font-normal">Komposisi (B / S / Skip)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {perhitungan.table1.rows.map(
-                    (row: { x: number; x2: number; y: number; xy: number; correct: number; error: number; skipped: number }) => (
-                      <tr key={row.x} className="hover:bg-slate-50">
-                        <td className="px-6 py-2 text-slate-900 font-semibold">{row.x}</td>
-                        <td className="px-6 py-2 text-slate-600">{row.x2}</td>
-                        <td className="px-6 py-2 text-orange-600 font-bold">{row.y}</td>
-                        <td className="px-6 py-2 text-blue-600 font-semibold">{row.xy}</td>
-                        <td className="px-6 py-2 font-sans text-slate-500">
-                          <span className="text-emerald-600">{row.correct}</span> benar,{" "}
-                          <span className="text-rose-600">{row.error}</span> salah,{" "}
-                          <span className="text-amber-600">{row.skipped}</span> skip
-                        </td>
-                      </tr>
-                    )
-                  )}
-                </tbody>
-                <tfoot className="sticky bottom-0 bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
-                  <tr>
-                    <td className="px-6 py-3">ΣX = {perhitungan.table1.summary.sigmaX}</td>
-                    <td className="px-6 py-3">ΣX² = {perhitungan.table1.summary.sigmaX2}</td>
-                    <td className="px-6 py-3 text-orange-600">ΣY = {perhitungan.table1.summary.sigmaY}</td>
-                    <td className="px-6 py-3 text-blue-600">ΣXY = {perhitungan.table1.summary.sigmaXY}</td>
-                    <td className="px-6 py-3 font-sans text-slate-600">Mean Ȳ = {perhitungan.table1.summary.meanY}</td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
+        {/* Banner Navigasi ke Tab Audit (Hidden on Print) */}
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-600 print:hidden">
+          <div>
+            <span className="font-bold text-slate-800 block text-xs sm:text-sm">
+              Membutuhkan Rincian Validasi & Audit Matematis?
+            </span>
+            <p className="text-slate-500 mt-0.5">
+              Lihat checklist validasi konsistensi, Tabel 1 (X, X², Y, X.Y), Tabel 2 (Distribusi Frekuensi), dan rincian pengerjaan tiap kolom.
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("audit")}
+            className="inline-flex items-center gap-1.5 shrink-0 rounded-xl bg-white border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-100 transition"
+          >
+            <Calculator size={14} className="text-orange-500" />
+            Buka Menu Audit Perhitungan →
+          </button>
+        </div>
+      </div>
 
-          {/* Tabel 2: Distribusi Frekuensi (Y, f, f.y, d, f.d) */}
-          <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            <div className="border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <h2 className="text-base font-bold text-slate-900">
-                  Tabel 2 – Distribusi Frekuensi (Y, f, f.y, d, f.d)
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Disusun menurun dari skor Y tertinggi ke terendah. Mean = Σ(f.y) / 50 = {perhitungan.table2.summary.mean}.
-                </p>
+      {/* SECTION 2: AUDIT & PERHITUNGAN MATEMATIS (Aktif saat tab Audit, HIDDEN ON PRINT / EXPORT PDF) */}
+      <div className={`print:hidden ${activeTab === "audit" ? "space-y-8 block" : "hidden"}`}>
+        {perhitungan && (
+          <div className="space-y-8">
+            {/* Audit & Validasi Matematis Checklist */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-emerald-500" />
+                    Audit & Validasi Konsistensi Matematis
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Verifikasi otomatis seluruh konsistensi antar-aspek (Tabel 1, Tabel 2, Panker, Tianker, Janker, Hanker)
+                  </p>
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+                    perhitungan.validation.isValid
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-rose-50 text-rose-700 border border-rose-200"
+                  }`}
+                >
+                  {perhitungan.validation.isValid ? "100% VALID & KONSISTEN" : "ADA KETIDAKSESUAIAN"}
+                </span>
               </div>
-              <div className="flex gap-4 text-xs font-mono font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                <span>Σf = {perhitungan.table2.summary.sigmaF}</span>
-                <span className="text-orange-600">Σ(f.y) = {perhitungan.table2.summary.sigmaFY}</span>
-                <span className="text-slate-600">Σd = {perhitungan.table2.summary.sigmaD}</span>
-                <span className="text-emerald-600">Σ(f.d) = {perhitungan.table2.summary.sigmaFD}</span>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {perhitungan.validation.checks.map(
+                  (check: { name: string; expected: string | number; actual: string | number; valid: boolean }, idx: number) => (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-2xl border text-xs ${
+                        check.valid
+                          ? "bg-slate-50/60 border-slate-200 text-slate-800"
+                          : "bg-rose-50 border-rose-200 text-rose-800"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between font-semibold">
+                        <span>{check.name}</span>
+                        {check.valid ? (
+                          <Check size={14} className="text-emerald-600 shrink-0" />
+                        ) : (
+                          <AlertCircle size={14} className="text-rose-600 shrink-0" />
+                        )}
+                      </div>
+                      <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
+                        <span>Harapan: {check.expected}</span>
+                        <span className="font-mono font-medium">Aktual: {check.actual}</span>
+                      </div>
+                    </div>
+                  )
+                )}
               </div>
             </div>
 
-            <div className="max-h-96 overflow-x-auto overflow-y-auto">
-              <table className="w-full text-left text-xs font-mono">
-                <thead className="sticky top-0 bg-slate-50 font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
-                  <tr>
-                    <th className="px-6 py-3">Y (Skor Unik)</th>
-                    <th className="px-6 py-3">f (Frekuensi)</th>
-                    <th className="px-6 py-3">f.y (f × Y)</th>
-                    <th className="px-6 py-3">d (|Y - Mean|)</th>
-                    <th className="px-6 py-3">f.d (f × d)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {perhitungan.table2.rows.map((row: { y: number; f: number; fy: number; d: number; fd: number }) => (
-                    <tr key={row.y} className="hover:bg-slate-50">
-                      <td className="px-6 py-2.5 text-slate-900 font-bold">{row.y}</td>
-                      <td className="px-6 py-2.5 text-blue-600 font-semibold">{row.f}</td>
-                      <td className="px-6 py-2.5 text-orange-600 font-semibold">{row.fy}</td>
-                      <td className="px-6 py-2.5 text-slate-600">{row.d.toFixed(4)}</td>
-                      <td className="px-6 py-2.5 text-emerald-600 font-bold">{row.fd.toFixed(4)}</td>
+            {/* Tabel 1: Hasil Lembar Kerja (X, X², Y, X.Y) */}
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Tabel 1 – Hasil Lembar Kerja (X, X², Y, X.Y)
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Y = Benar + Salah (total jawaban terisi per kolom). Skip tidak masuk dalam perhitungan Y.
+                  </p>
+                </div>
+                <div className="flex gap-4 text-xs font-mono font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                  <span>ΣX = {perhitungan.table1.summary.sigmaX}</span>
+                  <span>ΣX² = {perhitungan.table1.summary.sigmaX2}</span>
+                  <span className="text-orange-600">ΣY = {perhitungan.table1.summary.sigmaY}</span>
+                  <span className="text-blue-600">ΣXY = {perhitungan.table1.summary.sigmaXY}</span>
+                </div>
+              </div>
+
+              <div className="max-h-96 overflow-x-auto overflow-y-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="sticky top-0 bg-slate-50 font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-3">X (Kolom)</th>
+                      <th className="px-6 py-3">X² (Kuadrat X)</th>
+                      <th className="px-6 py-3">Y (Benar + Salah)</th>
+                      <th className="px-6 py-3">X.Y (X × Y)</th>
+                      <th className="px-6 py-3 font-sans text-slate-400 font-normal">Komposisi (B / S / Skip)</th>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot className="sticky bottom-0 bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
-                  <tr>
-                    <td className="px-6 py-3">ΣY = {perhitungan.table2.summary.sigmaYUnique}</td>
-                    <td className="px-6 py-3 text-blue-600">Σf = {perhitungan.table2.summary.sigmaF}</td>
-                    <td className="px-6 py-3 text-orange-600">Σ(f.y) = {perhitungan.table2.summary.sigmaFY}</td>
-                    <td className="px-6 py-3 text-slate-600">Σd = {perhitungan.table2.summary.sigmaD.toFixed(4)}</td>
-                    <td className="px-6 py-3 text-emerald-600">Σ(f.d) = {perhitungan.table2.summary.sigmaFD.toFixed(4)}</td>
-                  </tr>
-                </tfoot>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {perhitungan.table1.rows.map(
+                      (row: { x: number; x2: number; y: number; xy: number; correct: number; error: number; skipped: number }) => (
+                        <tr key={row.x} className="hover:bg-slate-50">
+                          <td className="px-6 py-2 text-slate-900 font-semibold">{row.x}</td>
+                          <td className="px-6 py-2 text-slate-600">{row.x2}</td>
+                          <td className="px-6 py-2 text-orange-600 font-bold">{row.y}</td>
+                          <td className="px-6 py-2 text-blue-600 font-semibold">{row.xy}</td>
+                          <td className="px-6 py-2 font-sans text-slate-500">
+                            <span className="text-emerald-600">{row.correct}</span> benar,{" "}
+                            <span className="text-rose-600">{row.error}</span> salah,{" "}
+                            <span className="text-amber-600">{row.skipped}</span> skip
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                  <tfoot className="sticky bottom-0 bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
+                    <tr>
+                      <td className="px-6 py-3">ΣX = {perhitungan.table1.summary.sigmaX}</td>
+                      <td className="px-6 py-3">ΣX² = {perhitungan.table1.summary.sigmaX2}</td>
+                      <td className="px-6 py-3 text-orange-600">ΣY = {perhitungan.table1.summary.sigmaY}</td>
+                      <td className="px-6 py-3 text-blue-600">ΣXY = {perhitungan.table1.summary.sigmaXY}</td>
+                      <td className="px-6 py-3 font-sans text-slate-600">Mean Ȳ = {perhitungan.table1.summary.meanY}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* Tabel 2: Distribusi Frekuensi (Y, f, f.y, d, f.d) */}
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div className="border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Tabel 2 – Distribusi Frekuensi (Y, f, f.y, d, f.d)
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Disusun menurun dari skor Y tertinggi ke terendah. Mean = Σ(f.y) / 50 = {perhitungan.table2.summary.mean}.
+                  </p>
+                </div>
+                <div className="flex gap-4 text-xs font-mono font-bold bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                  <span>Σf = {perhitungan.table2.summary.sigmaF}</span>
+                  <span className="text-orange-600">Σ(f.y) = {perhitungan.table2.summary.sigmaFY}</span>
+                  <span className="text-slate-600">Σd = {perhitungan.table2.summary.sigmaD}</span>
+                  <span className="text-emerald-600">Σ(f.d) = {perhitungan.table2.summary.sigmaFD}</span>
+                </div>
+              </div>
+
+              <div className="max-h-96 overflow-x-auto overflow-y-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead className="sticky top-0 bg-slate-50 font-bold uppercase tracking-wider text-slate-600 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-3">Y (Skor Unik)</th>
+                      <th className="px-6 py-3">f (Frekuensi)</th>
+                      <th className="px-6 py-3">f.y (f × Y)</th>
+                      <th className="px-6 py-3">d (|Y - Mean|)</th>
+                      <th className="px-6 py-3">f.d (f × d)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {perhitungan.table2.rows.map((row: { y: number; f: number; fy: number; d: number; fd: number }) => (
+                      <tr key={row.y} className="hover:bg-slate-50">
+                        <td className="px-6 py-2.5 text-slate-900 font-bold">{row.y}</td>
+                        <td className="px-6 py-2.5 text-blue-600 font-semibold">{row.f}</td>
+                        <td className="px-6 py-2.5 text-orange-600 font-semibold">{row.fy}</td>
+                        <td className="px-6 py-2.5 text-slate-600">{row.d.toFixed(4)}</td>
+                        <td className="px-6 py-2.5 text-emerald-600 font-bold">{row.fd.toFixed(4)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="sticky bottom-0 bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
+                    <tr>
+                      <td className="px-6 py-3">ΣY = {perhitungan.table2.summary.sigmaYUnique}</td>
+                      <td className="px-6 py-3 text-blue-600">Σf = {perhitungan.table2.summary.sigmaF}</td>
+                      <td className="px-6 py-3 text-orange-600">Σ(f.y) = {perhitungan.table2.summary.sigmaFY}</td>
+                      <td className="px-6 py-3 text-slate-600">Σd = {perhitungan.table2.summary.sigmaD.toFixed(4)}</td>
+                      <td className="px-6 py-3 text-emerald-600">Σ(f.d) = {perhitungan.table2.summary.sigmaFD.toFixed(4)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            {/* Rincian Asal-Usul Angka & Tahapan Perhitungan Manual */}
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
+              <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+                Rincian Asal-Usul Angka & Tahapan Perhitungan (Audit Trail HR)
+              </h2>
+
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700">
+                {/* PANKER */}
+                <div className="p-4 rounded-2xl bg-orange-50/50 border border-orange-100 space-y-2">
+                  <h3 className="font-bold text-orange-900 text-sm flex items-center justify-between">
+                    <span>1. PANKER (Kecepatan Kerja)</span>
+                    <span className="font-mono text-base">{perhitungan.panker.formatted}</span>
+                  </h3>
+                  <p className="text-slate-600">
+                    Dihitung dari dua tabel untuk menjamin konsistensi mutlak:
+                  </p>
+                  <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-orange-200">
+                    <div>• Tabel 1: Panker 1 = ΣY / N = {perhitungan.table1.summary.sigmaY} / 50 = <span className="font-bold text-orange-600">{perhitungan.panker.panker1}</span></div>
+                    <div>• Tabel 2: Panker 2 = Σ(f.y) / N = {perhitungan.table2.summary.sigmaFY} / 50 = <span className="font-bold text-orange-600">{perhitungan.panker.panker2}</span></div>
+                    <div className="text-[11px] text-emerald-700 font-sans font-semibold pt-1">
+                      ✓ Panker 1 == Panker 2 (Identik)
+                    </div>
+                  </div>
+                </div>
+
+                {/* TIANKER */}
+                <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-100 space-y-2">
+                  <h3 className="font-bold text-rose-900 text-sm flex items-center justify-between">
+                    <span>2. TIANKER (Ketelitian Kerja)</span>
+                    <span className="font-mono text-base">{perhitungan.tianker.formatted}</span>
+                  </h3>
+                  <p className="text-slate-600">
+                    Hanya menggunakan total jawaban salah (Error) dari seluruh 50 kolom:
+                  </p>
+                  <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-rose-200">
+                    <div>• TIANKER = ΣError = <span className="font-bold text-rose-600">{perhitungan.tianker.totalError}</span></div>
+                    <div className="text-[11px] text-slate-500 font-sans">
+                      *Total Skip ({perhitungan.tianker.totalSkipped}) dicatat tetapi tidak dihitung sebagai TIANKER.
+                    </div>
+                  </div>
+                </div>
+
+                {/* JANKER */}
+                <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 space-y-2">
+                  <h3 className="font-bold text-emerald-900 text-sm flex items-center justify-between">
+                    <span>3. JANKER (Keajegan Kerja)</span>
+                    <span className="font-mono text-base">{perhitungan.janker.formatted}</span>
+                  </h3>
+                  <p className="text-slate-600">
+                    Standar Deviasi Rata-rata dari Tabel Distribusi Frekuensi:
+                  </p>
+                  <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-emerald-200">
+                    <div>• Mean = Σ(f.y) / 50 = {perhitungan.table2.summary.mean}</div>
+                    <div>• Σ(f.d) = {perhitungan.table2.summary.sigmaFD.toFixed(4)}</div>
+                    <div>• JANKER = Σ(f.d) / 50 = {perhitungan.table2.summary.sigmaFD.toFixed(4)} / 50 = <span className="font-bold text-emerald-600">{perhitungan.janker.formatted}</span></div>
+                  </div>
+                </div>
+
+                {/* HANKER */}
+                <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2">
+                  <h3 className="font-bold text-blue-900 text-sm flex items-center justify-between">
+                    <span>4. HANKER (Ketahanan Kerja / Regresi Linear)</span>
+                    <span className="font-mono text-base">{perhitungan.hanker.formatted}</span>
+                  </h3>
+                  <p className="text-slate-600">
+                    Persamaan Regresi Linear: Y = a + bX
+                  </p>
+                  <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-blue-200 text-[11px]">
+                    <div>• b = [50×ΣXY - ΣX×ΣY] / 520625 = {perhitungan.hanker.numerator} / 520625 = <span className="font-bold">{perhitungan.hanker.b}</span></div>
+                    <div>• a = Ȳ - (b × 25.5) = {perhitungan.hanker.meanY} - ({perhitungan.hanker.b} × 25.5) = <span className="font-bold">{perhitungan.hanker.a}</span></div>
+                    <div>• Y₀ = a = {perhitungan.hanker.y0}</div>
+                    <div>• Y₅₀ = a + (b × 50) = {perhitungan.hanker.y50}</div>
+                    <div className="pt-1 text-xs text-blue-700 font-bold">
+                      • HANKER = Y₅₀ - Y₀ = 50 × b = {perhitungan.hanker.formatted}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Rincian Asal-Usul Angka & Tahapan Perhitungan Manual */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
-              Rincian Asal-Usul Angka & Tahapan Perhitungan (Audit Trail HR)
+        {/* Rincian Lengkap Jawaban Tiap Kolom (1–50) */}
+        <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="border-b border-slate-100 px-6 py-4">
+            <h2 className="text-base font-bold text-slate-900">
+              Rincian Lengkap Jawaban Tiap Kolom (1–50)
             </h2>
+            <p className="text-xs text-slate-500">
+              Detail perolehan angka benar, salah, dan skip per interval kolom pengerjaan
+            </p>
+          </div>
 
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700">
-              {/* PANKER */}
-              <div className="p-4 rounded-2xl bg-orange-50/50 border border-orange-100 space-y-2">
-                <h3 className="font-bold text-orange-900 text-sm flex items-center justify-between">
-                  <span>1. PANKER (Kecepatan Kerja)</span>
-                  <span className="font-mono text-base">{perhitungan.panker.formatted}</span>
-                </h3>
-                <p className="text-slate-600">
-                  Dihitung dari dua tabel untuk menjamin konsistensi mutlak:
-                </p>
-                <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-orange-200">
-                  <div>• Tabel 1: Panker 1 = ΣY / N = {perhitungan.table1.summary.sigmaY} / 50 = <span className="font-bold text-orange-600">{perhitungan.panker.panker1}</span></div>
-                  <div>• Tabel 2: Panker 2 = Σ(f.y) / N = {perhitungan.table2.summary.sigmaFY} / 50 = <span className="font-bold text-orange-600">{perhitungan.panker.panker2}</span></div>
-                  <div className="text-[11px] text-emerald-700 font-sans font-semibold pt-1">
-                    ✓ Panker 1 == Panker 2 (Identik)
-                  </div>
-                </div>
-              </div>
-
-              {/* TIANKER */}
-              <div className="p-4 rounded-2xl bg-rose-50/50 border border-rose-100 space-y-2">
-                <h3 className="font-bold text-rose-900 text-sm flex items-center justify-between">
-                  <span>2. TIANKER (Ketelitian Kerja)</span>
-                  <span className="font-mono text-base">{perhitungan.tianker.formatted}</span>
-                </h3>
-                <p className="text-slate-600">
-                  Hanya menggunakan total jawaban salah (Error) dari seluruh 50 kolom:
-                </p>
-                <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-rose-200">
-                  <div>• TIANKER = ΣError = <span className="font-bold text-rose-600">{perhitungan.tianker.totalError}</span></div>
-                  <div className="text-[11px] text-slate-500 font-sans">
-                    *Total Skip ({perhitungan.tianker.totalSkipped}) dicatat tetapi tidak dihitung sebagai TIANKER.
-                  </div>
-                </div>
-              </div>
-
-              {/* JANKER */}
-              <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-100 space-y-2">
-                <h3 className="font-bold text-emerald-900 text-sm flex items-center justify-between">
-                  <span>3. JANKER (Keajegan Kerja)</span>
-                  <span className="font-mono text-base">{perhitungan.janker.formatted}</span>
-                </h3>
-                <p className="text-slate-600">
-                  Standar Deviasi Rata-rata dari Tabel Distribusi Frekuensi:
-                </p>
-                <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-emerald-200">
-                  <div>• Mean = Σ(f.y) / 50 = {perhitungan.table2.summary.mean}</div>
-                  <div>• Σ(f.d) = {perhitungan.table2.summary.sigmaFD.toFixed(4)}</div>
-                  <div>• JANKER = Σ(f.d) / 50 = {perhitungan.table2.summary.sigmaFD.toFixed(4)} / 50 = <span className="font-bold text-emerald-600">{perhitungan.janker.formatted}</span></div>
-                </div>
-              </div>
-
-              {/* HANKER */}
-              <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 space-y-2">
-                <h3 className="font-bold text-blue-900 text-sm flex items-center justify-between">
-                  <span>4. HANKER (Ketahanan Kerja / Regresi Linear)</span>
-                  <span className="font-mono text-base">{perhitungan.hanker.formatted}</span>
-                </h3>
-                <p className="text-slate-600">
-                  Persamaan Regresi Linear: Y = a + bX
-                </p>
-                <div className="font-mono space-y-1 bg-white p-3 rounded-xl border border-blue-200 text-[11px]">
-                  <div>• b = [50×ΣXY - ΣX×ΣY] / 520625 = {perhitungan.hanker.numerator} / 520625 = <span className="font-bold">{perhitungan.hanker.b}</span></div>
-                  <div>• a = Ȳ - (b × 25.5) = {perhitungan.hanker.meanY} - ({perhitungan.hanker.b} × 25.5) = <span className="font-bold">{perhitungan.hanker.a}</span></div>
-                  <div>• Y₀ = a = {perhitungan.hanker.y0}</div>
-                  <div>• Y₅₀ = a + (b × 50) = {perhitungan.hanker.y50}</div>
-                  <div className="pt-1 text-xs text-blue-700 font-bold">
-                    • HANKER = Y₅₀ - Y₀ = 50 × b = {perhitungan.hanker.formatted}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="max-h-96 overflow-x-auto overflow-y-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="sticky top-0 bg-slate-50 font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-3">Nomor Kolom</th>
+                  <th className="px-6 py-3">Benar</th>
+                  <th className="px-6 py-3">Salah</th>
+                  <th className="px-6 py-3">Terlewat (Skip)</th>
+                  <th className="px-6 py-3">Total Terjawab</th>
+                  <th className="px-6 py-3">Posisi Terakhir</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {breakdown.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-400">
+                      Tidak ada rincian jawaban tersimpan.
+                    </td>
+                  </tr>
+                ) : (
+                  breakdown.map((row) => (
+                    <tr key={row.kolom} className="hover:bg-slate-50">
+                      <td className="px-6 py-2.5 font-bold text-slate-900">
+                        Kolom {row.kolom}
+                      </td>
+                      <td className="px-6 py-2.5 font-semibold text-emerald-600">
+                        {row.benar}
+                      </td>
+                      <td className="px-6 py-2.5 font-semibold text-rose-600">
+                        {row.salah}
+                      </td>
+                      <td className="px-6 py-2.5 font-semibold text-amber-600">
+                        {row.skipDiperhitungkan}
+                      </td>
+                      <td className="px-6 py-2.5 text-slate-700">
+                        {row.terjawab}
+                      </td>
+                      <td className="px-6 py-2.5 text-slate-700">
+                        {row.posisiTerakhir} / 27
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
