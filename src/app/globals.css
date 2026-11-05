@@ -105,4 +105,26 @@ button {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
+
+  /* Perbaikan presisi agar Kurva Kerja Recharts (SVG) pas 100% dan tidak terpotong di sisi kanan */
+  .kraepelin-chart-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 220px !important;
+    position: relative !important;
+  }
+
+  .kraepelin-chart-wrapper .recharts-responsive-container,
+  .kraepelin-chart-wrapper .recharts-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .kraepelin-chart-wrapper svg.recharts-surface {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+  }
 }

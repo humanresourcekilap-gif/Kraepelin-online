@@ -163,7 +163,12 @@ export default function CandidateDetailPage({
   }
 
   function handlePrint() {
-    window.print();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("resize"));
+      setTimeout(() => {
+        window.print();
+      }, 80);
+    }
   }
 
   function copyCandidateTestLink() {
@@ -418,20 +423,21 @@ export default function CandidateDetailPage({
               Belum ada rekaman jawaban kolom untuk divisualisasikan.
             </div>
           ) : (
-            <div className="mt-6 h-80 w-full print:mt-2.5 print:h-52">
+            <div className="mt-6 h-80 w-full print:mt-2.5 print:h-52 kraepelin-chart-wrapper">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+                <LineChart data={chartData} margin={{ top: 10, right: 35, left: -15, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis
                     dataKey="kolomNomor"
-                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    tick={{ fontSize: 10, fill: "#64748b" }}
                     interval={4}
                     stroke="#cbd5e1"
                   />
                   <YAxis
                     domain={[0, 27]}
-                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    tick={{ fontSize: 10, fill: "#64748b" }}
                     stroke="#cbd5e1"
+                    width={35}
                   />
                   <Tooltip
                     content={({ active, payload }) => {
@@ -469,7 +475,8 @@ export default function CandidateDetailPage({
                         value: `Mean: ${pankerVal}`,
                         position: "insideTopRight",
                         fill: "#10b981",
-                        fontSize: 11,
+                        fontSize: 10,
+                        offset: 10,
                       }}
                     />
                   )}
