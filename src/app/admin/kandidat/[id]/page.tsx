@@ -163,12 +163,7 @@ export default function CandidateDetailPage({
   }
 
   function handlePrint() {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("resize"));
-      setTimeout(() => {
-        window.print();
-      }, 80);
-    }
+    window.print();
   }
 
   function copyCandidateTestLink() {
@@ -423,48 +418,95 @@ export default function CandidateDetailPage({
               Belum ada rekaman jawaban kolom untuk divisualisasikan.
             </div>
           ) : (
-            <div className="mt-6 h-80 w-full print:mt-2.5 print:h-52 kraepelin-chart-wrapper">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 35, left: -15, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <>
+              {/* Tampilan Layar: Interaktif dengan Tooltip & ResponsiveContainer */}
+              <div className="print:hidden mt-6 h-80 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 10, right: 25, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="kolomNomor"
+                      tick={{ fontSize: 11, fill: "#64748b" }}
+                      interval={4}
+                      stroke="#cbd5e1"
+                    />
+                    <YAxis
+                      domain={[0, 27]}
+                      tick={{ fontSize: 11, fill: "#64748b" }}
+                      stroke="#cbd5e1"
+                    />
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload as ColumnBreakdown;
+                          return (
+                            <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-lg text-xs space-y-1">
+                              <p className="font-bold text-slate-900 border-b pb-1">
+                                Kolom {data.kolom}
+                              </p>
+                              <p className="text-emerald-600 font-semibold">
+                                Benar: {data.benar}
+                              </p>
+                              <p className="text-rose-600 font-semibold">
+                                Salah: {data.salah}
+                              </p>
+                              <p className="text-amber-600 font-semibold">
+                                Terlewat: {data.skipDiperhitungkan}
+                              </p>
+                              <p className="text-slate-500 pt-1 border-t text-[11px]">
+                                Posisi Jawaban Terakhir: {data.posisiTerakhir} / 27
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    {pankerVal !== null && (
+                      <ReferenceLine
+                        y={pankerVal}
+                        stroke="#10b981"
+                        strokeDasharray="4 4"
+                        label={{
+                          value: `Mean: ${pankerVal}`,
+                          position: "insideTopRight",
+                          fill: "#10b981",
+                          fontSize: 11,
+                        }}
+                      />
+                    )}
+                    <Line
+                      type="monotone"
+                      dataKey="benar"
+                      stroke="#f97316"
+                      strokeWidth={2.5}
+                      dot={{ r: 2.5, fill: "#f97316" }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Tampilan Cetak / PDF: Statis Presisi (Tanpa ResizeObserver agar tidak hilang/terpotong) */}
+              <div className="hidden print:block w-full mt-2.5">
+                <LineChart
+                  width={665}
+                  height={195}
+                  data={chartData}
+                  margin={{ top: 10, right: 30, left: -15, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis
                     dataKey="kolomNomor"
-                    tick={{ fontSize: 10, fill: "#64748b" }}
+                    tick={{ fontSize: 9, fill: "#475569" }}
                     interval={4}
                     stroke="#cbd5e1"
                   />
                   <YAxis
                     domain={[0, 27]}
-                    tick={{ fontSize: 10, fill: "#64748b" }}
+                    tick={{ fontSize: 9, fill: "#475569" }}
                     stroke="#cbd5e1"
-                    width={35}
-                  />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload as ColumnBreakdown;
-                        return (
-                          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-lg text-xs space-y-1">
-                            <p className="font-bold text-slate-900 border-b pb-1">
-                              Kolom {data.kolom}
-                            </p>
-                            <p className="text-emerald-600 font-semibold">
-                              Benar: {data.benar}
-                            </p>
-                            <p className="text-rose-600 font-semibold">
-                              Salah: {data.salah}
-                            </p>
-                            <p className="text-amber-600 font-semibold">
-                              Terlewat: {data.skipDiperhitungkan}
-                            </p>
-                            <p className="text-slate-500 pt-1 border-t text-[11px]">
-                              Posisi Jawaban Terakhir: {data.posisiTerakhir} / 27
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
+                    width={30}
                   />
                   {pankerVal !== null && (
                     <ReferenceLine
@@ -474,9 +516,9 @@ export default function CandidateDetailPage({
                       label={{
                         value: `Mean: ${pankerVal}`,
                         position: "insideTopRight",
-                        fill: "#10b981",
-                        fontSize: 10,
-                        offset: 10,
+                        fill: "#059669",
+                        fontSize: 9,
+                        offset: 8,
                       }}
                     />
                   )}
@@ -484,13 +526,13 @@ export default function CandidateDetailPage({
                     type="monotone"
                     dataKey="benar"
                     stroke="#f97316"
-                    strokeWidth={2.5}
-                    dot={{ r: 2.5, fill: "#f97316" }}
-                    activeDot={{ r: 5 }}
+                    strokeWidth={2}
+                    dot={{ r: 2, fill: "#f97316" }}
+                    isAnimationActive={false}
                   />
                 </LineChart>
-              </ResponsiveContainer>
-            </div>
+              </div>
+            </>
           )}
         </div>
 
