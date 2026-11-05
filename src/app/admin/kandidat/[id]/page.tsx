@@ -233,7 +233,7 @@ export default function CandidateDetailPage({
       : null;
 
   return (
-    <div className="space-y-8 print:p-0 print:space-y-6">
+    <div className="space-y-8 print:p-0 print:space-y-4 print:w-full">
       {/* Navigation & Header (Hidden on Print) */}
       <div className="flex flex-col justify-between gap-4 print:hidden sm:flex-row sm:items-center">
         <Link
@@ -278,8 +278,8 @@ export default function CandidateDetailPage({
       </div>
 
       {/* Printable Report Header */}
-      <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-8 shadow-sm">
-        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start border-b border-slate-100 pb-6">
+      <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-8 shadow-sm print-avoid-break print:p-4 print:rounded-xl print:border-slate-300 print:shadow-none">
+        <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-start border-b border-slate-100 pb-6 print:pb-3 print:gap-3">
           <div className="flex items-start gap-4">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-2xl font-bold text-white shadow-md shadow-orange-500/25">
               {candidate.nama.charAt(0).toUpperCase()}
@@ -329,7 +329,7 @@ export default function CandidateDetailPage({
         </div>
 
         {/* Profil Kontak */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 text-xs text-slate-600">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 text-xs text-slate-600 print:pt-3 print:gap-2.5">
           <div>
             <span className="text-slate-400 block font-semibold text-[10px] uppercase">Email</span>
             <span className="font-semibold text-slate-800 mt-0.5 block">{candidate.email}</span>
@@ -387,10 +387,10 @@ export default function CandidateDetailPage({
       </div>
 
       {/* SECTION 1: RINGKASAN EKSEKUTIF (Aktif saat tab Ringkasan, & SELALU TERCETAK SAAT PRINT / EXPORT PDF) */}
-      <div className={`space-y-8 ${activeTab === "ringkasan" ? "block" : "hidden print:block"}`}>
+      <div className={`space-y-8 print:space-y-4 ${activeTab === "ringkasan" ? "block" : "hidden print:block"}`}>
         {/* 1. Kurva Kerja Kraepelin (50 Kolom) - DITARUH PALING ATAS */}
-        <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm print:break-inside-avoid">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+        <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm print-avoid-break print:p-4 print:rounded-xl print:border-slate-300 print:shadow-none">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4 print:pb-2.5">
             <div>
               <h2 className="text-base font-bold text-slate-900">
                 Kurva Kerja Kraepelin (50 Kolom)
@@ -418,7 +418,7 @@ export default function CandidateDetailPage({
               Belum ada rekaman jawaban kolom untuk divisualisasikan.
             </div>
           ) : (
-            <div className="mt-6 h-80 w-full">
+            <div className="mt-6 h-80 w-full print:mt-2.5 print:h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -488,13 +488,13 @@ export default function CandidateDetailPage({
         </div>
 
         {/* 2. Hasil & Indikator Psikometri Kraepelin */}
-        <div className="print:break-inside-avoid">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">
+        <div className="print-avoid-break">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3 print:mb-2">
             Hasil & Indikator Psikometri Kraepelin
           </h2>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 print:gap-2.5">
             {/* PANKER */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3 print:p-3 print:rounded-xl print:border-slate-300 print:shadow-none">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
                   PANKER (Kecepatan)
@@ -504,13 +504,13 @@ export default function CandidateDetailPage({
                 </div>
               </div>
               <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 print:text-xl">
                   {pankerVal !== null ? pankerVal : "-"}
                 </p>
                 <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Rata-rata jawaban / kolom</p>
               </div>
               {norma.panker?.category && (
-                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1 print:pt-1">
                   <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
                   <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.panker.category)}`}>
                     {norma.panker.category}
@@ -520,7 +520,7 @@ export default function CandidateDetailPage({
             </div>
 
             {/* TIANKER */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3 print:p-3 print:rounded-xl print:border-slate-300 print:shadow-none">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
                   TIANKER (Ketelitian)
@@ -530,13 +530,13 @@ export default function CandidateDetailPage({
                 </div>
               </div>
               <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 print:text-xl">
                   {tiankerVal !== null ? tiankerVal : "-"}
                 </p>
                 <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Total kesalahan (Error)</p>
               </div>
               {norma.tianker?.category && (
-                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1 print:pt-1">
                   <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
                   <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.tianker.category)}`}>
                     {norma.tianker.category}
@@ -546,7 +546,7 @@ export default function CandidateDetailPage({
             </div>
 
             {/* JANKER */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3 print:p-3 print:rounded-xl print:border-slate-300 print:shadow-none">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
                   JANKER (Kestabilan)
@@ -556,13 +556,13 @@ export default function CandidateDetailPage({
                 </div>
               </div>
               <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 print:text-xl">
                   {jankerVal !== null ? jankerVal : "-"}
                 </p>
                 <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Deviasi rata-rata</p>
               </div>
               {(norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category) && (
-                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1 print:pt-1">
                   <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
                   <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category || "")}`}>
                     {norma.janker?.category || (norma as Record<string, { category?: string }>).jankerAverageDeviation?.category}
@@ -572,7 +572,7 @@ export default function CandidateDetailPage({
             </div>
 
             {/* HANKER */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-5 shadow-sm space-y-2 sm:space-y-3 print:p-3 print:rounded-xl print:border-slate-300 print:shadow-none">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">
                   HANKER (Ketahanan)
@@ -582,13 +582,13 @@ export default function CandidateDetailPage({
                 </div>
               </div>
               <div>
-                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 print:text-xl">
                   {hankerVal !== null ? hankerVal : "-"}
                 </p>
                 <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Kemiringan kurva kerja</p>
               </div>
               {norma.hanker?.category && (
-                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-1 print:pt-1">
                   <span className="text-[10px] sm:text-[11px] text-slate-500">Evaluasi:</span>
                   <span className={`rounded-md border px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-center ${getNormBadgeColor(norma.hanker.category)}`}>
                     {norma.hanker.category}
@@ -599,42 +599,42 @@ export default function CandidateDetailPage({
           </div>
 
           {/* Rekap Akumulasi Jawaban: Total Benar, Total Salah, Total Terjawab, Tingkat Akurasi */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-3 sm:mt-4">
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3.5 sm:p-4 shadow-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-3 sm:mt-4 print:mt-2.5 print:gap-2.5">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3.5 sm:p-4 shadow-sm print:p-3 print:rounded-xl print:shadow-none">
               <span className="text-[10px] sm:text-xs font-bold text-emerald-700 uppercase tracking-wider block">
                 Total Jawaban Benar
               </span>
-              <p className="text-2xl sm:text-3xl font-black text-emerald-800 mt-1">
+              <p className="text-2xl sm:text-3xl font-black text-emerald-800 mt-1 print:text-xl">
                 {totalBenar}
               </p>
               <p className="text-[10px] text-emerald-600 mt-0.5">dari 50 kolom pengerjaan</p>
             </div>
 
-            <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-3.5 sm:p-4 shadow-sm">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-3.5 sm:p-4 shadow-sm print:p-3 print:rounded-xl print:shadow-none">
               <span className="text-[10px] sm:text-xs font-bold text-rose-700 uppercase tracking-wider block">
                 Total Jawaban Salah
               </span>
-              <p className="text-2xl sm:text-3xl font-black text-rose-800 mt-1">
+              <p className="text-2xl sm:text-3xl font-black text-rose-800 mt-1 print:text-xl">
                 {totalSalah}
               </p>
               <p className="text-[10px] text-rose-600 mt-0.5">kesalahan penjumlahan (TIANKER)</p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5 sm:p-4 shadow-sm">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5 sm:p-4 shadow-sm print:p-3 print:rounded-xl print:shadow-none">
               <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider block">
                 Total Terjawab (Y)
               </span>
-              <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+              <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-1 print:text-xl">
                 {totalTerjawab}
               </p>
               <p className="text-[10px] text-slate-500 mt-0.5">Benar + Salah (ΣY Tabel 1)</p>
             </div>
 
-            <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-3.5 sm:p-4 shadow-sm">
+            <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-3.5 sm:p-4 shadow-sm print:p-3 print:rounded-xl print:shadow-none">
               <span className="text-[10px] sm:text-xs font-bold text-blue-700 uppercase tracking-wider block">
                 Tingkat Akurasi
               </span>
-              <p className="text-2xl sm:text-3xl font-black text-blue-800 mt-1">
+              <p className="text-2xl sm:text-3xl font-black text-blue-800 mt-1 print:text-xl">
                 {persentaseAkurasi}%
               </p>
               <p className="text-[10px] text-blue-600 mt-0.5">rasio ketepatan pengerjaan</p>
@@ -644,9 +644,9 @@ export default function CandidateDetailPage({
 
         {/* 3. Evaluasi Profil Kerja & Interpretasi Psikologis (Tanpa badge "Kurang Direkomendasikan" dll) */}
         {interpretasi && (
-          <div className="rounded-2xl sm:rounded-3xl border border-orange-200/90 bg-gradient-to-br from-white via-orange-50/20 to-amber-50/30 p-5 sm:p-8 shadow-sm space-y-6 print:break-inside-avoid">
+          <div className="rounded-2xl sm:rounded-3xl border border-orange-200/90 bg-gradient-to-br from-white via-orange-50/20 to-amber-50/30 p-5 sm:p-8 shadow-sm space-y-6 print:p-5 print:rounded-xl print:border-slate-300 print:shadow-none print:space-y-4 print-page-break">
             {/* Executive Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-100 pb-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-100 pb-5 print:pb-3">
               <div>
                 <div className="flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-orange-500 text-white shadow-sm">
@@ -663,7 +663,7 @@ export default function CandidateDetailPage({
             </div>
 
             {/* Ringkasan Karakter & Dinamika Kerja */}
-            <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-sm">
+            <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-sm print:p-3.5 print:rounded-xl print:border-slate-300 print:shadow-none print-avoid-break">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
                 Ringkasan Karakter & Dinamika Kerja
               </h4>
@@ -673,13 +673,13 @@ export default function CandidateDetailPage({
             </div>
 
             {/* 4 Pilar Analisis Mendalam */}
-            <div>
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+            <div className="print-avoid-break">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 print:mb-2">
                 Analisis Per Dimensi Psikometri
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 print:gap-2.5">
                 {/* Kecepatan */}
-                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2 print:p-3 print:rounded-xl print:border-slate-300 print:shadow-none">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs sm:text-sm text-slate-800">
                       {interpretasi.aspek.kecepatan.nama}
@@ -694,7 +694,7 @@ export default function CandidateDetailPage({
                 </div>
 
                 {/* Ketelitian */}
-                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2 print:p-3 print:rounded-xl print:border-slate-300 print:shadow-none">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs sm:text-sm text-slate-800">
                       {interpretasi.aspek.ketelitian.nama}
@@ -709,7 +709,7 @@ export default function CandidateDetailPage({
                 </div>
 
                 {/* Kestabilan */}
-                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2 print:p-3 print:rounded-xl print:border-slate-300 print:shadow-none">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs sm:text-sm text-slate-800">
                       {interpretasi.aspek.kestabilan.nama}
@@ -724,7 +724,7 @@ export default function CandidateDetailPage({
                 </div>
 
                 {/* Ketahanan */}
-                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2">
+                <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-sm space-y-2 print:p-3 print:rounded-xl print:border-slate-300 print:shadow-none">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-xs sm:text-sm text-slate-800">
                       {interpretasi.aspek.ketahanan.nama}
@@ -746,9 +746,9 @@ export default function CandidateDetailPage({
             </div>
 
             {/* Kekuatan vs Area Perhatian */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 print:gap-3 print-avoid-break">
               {/* Kekuatan Utama */}
-              <div className="rounded-2xl bg-emerald-50/50 border border-emerald-200/80 p-4 sm:p-5 space-y-3">
+              <div className="rounded-2xl bg-emerald-50/50 border border-emerald-200/80 p-4 sm:p-5 space-y-3 print:p-3.5 print:rounded-xl print:border-slate-300">
                 <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs sm:text-sm">
                   <CheckCircle2 size={16} className="text-emerald-600" />
                   <span>Kekuatan & Keunggulan Kerja</span>
@@ -764,7 +764,7 @@ export default function CandidateDetailPage({
               </div>
 
               {/* Area Perhatian / Risiko */}
-              <div className="rounded-2xl bg-amber-50/50 border border-amber-200/80 p-4 sm:p-5 space-y-3">
+              <div className="rounded-2xl bg-amber-50/50 border border-amber-200/80 p-4 sm:p-5 space-y-3 print:p-3.5 print:rounded-xl print:border-slate-300">
                 <div className="flex items-center gap-2 text-amber-800 font-bold text-xs sm:text-sm">
                   <AlertCircle size={16} className="text-amber-600" />
                   <span>Area Perhatian & Mitigasi Risiko</span>
@@ -781,7 +781,7 @@ export default function CandidateDetailPage({
             </div>
 
             {/* Saran Penempatan Posisi */}
-            <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 space-y-3 shadow-sm">
+            <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 space-y-3 shadow-sm print:p-3.5 print:rounded-xl print:border-slate-300 print:shadow-none print-avoid-break">
               <div className="flex items-center gap-2 text-slate-800 font-bold text-xs sm:text-sm">
                 <Briefcase size={16} className="text-orange-500" />
                 <span>Saran Kesesuaian Posisi Kerja (Job Fit)</span>
@@ -799,7 +799,7 @@ export default function CandidateDetailPage({
             </div>
 
             {/* Panduan Pertanyaan Wawancara HR */}
-            <div className="rounded-2xl bg-white border border-orange-200 p-4 sm:p-5 space-y-3 shadow-sm">
+            <div className="rounded-2xl bg-white border border-orange-200 p-4 sm:p-5 space-y-3 shadow-sm print:p-3.5 print:rounded-xl print:border-slate-300 print:shadow-none print-avoid-break">
               <div className="flex items-center gap-2 text-orange-800 font-bold text-xs sm:text-sm">
                 <HelpCircle size={16} className="text-orange-600" />
                 <span>Panduan Pendalaman Wawancara HR (Interview Probing Points)</span>
@@ -811,7 +811,7 @@ export default function CandidateDetailPage({
                 {interpretasi.panduanWawancaraHR.map((q, idx) => (
                   <div
                     key={idx}
-                    className="rounded-xl border border-orange-100 bg-orange-50/40 p-3 text-xs text-slate-700 leading-relaxed flex items-start gap-2.5"
+                    className="rounded-xl border border-orange-100 bg-orange-50/40 p-3 text-xs text-slate-700 leading-relaxed flex items-start gap-2.5 print:p-2.5 print-avoid-break"
                   >
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-orange-200 text-orange-800 font-bold text-[10px]">
                       {idx + 1}

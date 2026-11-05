@@ -104,9 +104,9 @@ export default function AdminShell({
   ];
 
   return (
-    <div className="flex min-h-dvh bg-slate-50 font-sans antialiased">
+    <div className="flex min-h-dvh bg-slate-50 font-sans antialiased print:min-h-0 print:bg-white">
       {/* Mobile Header */}
-      <div className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
+      <div className="fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden print:hidden">
         <Link href="/admin" className="flex items-center gap-2.5">
           <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg">
             <Image
@@ -142,7 +142,7 @@ export default function AdminShell({
 
       {/* Sidebar Nav */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0 print:hidden ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -240,8 +240,8 @@ export default function AdminShell({
       </aside>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-x-hidden pt-16 lg:pt-0">
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+      <div className="flex flex-1 flex-col overflow-x-hidden pt-16 lg:pt-0 print:overflow-visible print:pt-0 print:w-full">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 print:p-0 print:m-0 print:w-full">{children}</main>
       </div>
     </div>
   );
